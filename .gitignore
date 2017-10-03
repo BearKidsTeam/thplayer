@@ -1,0 +1,5 @@
+# User Config
+*.pro.user
+
+# Autosave
+*.autosave
