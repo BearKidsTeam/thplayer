@@ -39,13 +39,13 @@ bool FmtFile::FmtFileReadGroup(QFile& file, song_t &song)
     }
     song.start = BEu32b(file);
     if(!ignoreAnUint) {
-        song.loopLen = BEu32b(file);
+        song.length = BEu32b(file);
         song.loopStart = BEu32b(file);
         file.seek(file.pos() + 8);
     } else {
         file.seek(file.pos() + 4);
         song.loopStart = BEu32b(file);
-        song.loopLen = BEu32b(file);
+        song.length = BEu32b(file);
         file.seek(file.pos() + 4);
     }
     song.rate = BEu32b(file);

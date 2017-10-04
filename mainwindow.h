@@ -3,6 +3,9 @@
 
 #include <QMainWindow>
 #include <QDragEnterEvent>
+#include <QAudioFormat>
+#include <QAudioOutput>
+#include <QBuffer>
 #include "fmtfile.h"
 
 namespace Ui {
@@ -20,14 +23,21 @@ public:
     ~MainWindow();
 
 private:
+    unsigned loopStart;
     Ui::MainWindow *ui;
     FmtFile fmt;
+    QAudioOutput* audioOutput = nullptr;
+    QBuffer songBuffer;
+    QAudioFormat getAudioFormat();
+    void setPlayListTableHeader();
 
 private slots:
     // drag n drop
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent* event);
     void on_playButton_clicked();
+    void when_audioOutput_stateChanged(QAudio::State newState);
+    void on_playlistTable_doubleClicked(const QModelIndex &index);
 };
 
 #endif // MAINWINDOW_H

@@ -84,6 +84,9 @@
       <property name="columnCount">
        <number>5</number>
       </property>
+      <attribute name="horizontalHeaderCascadingSectionResizes">
+       <bool>false</bool>
+      </attribute>
       <attribute name="horizontalHeaderDefaultSectionSize">
        <number>85</number>
       </attribute>
