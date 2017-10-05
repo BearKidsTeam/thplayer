@@ -73,7 +73,7 @@
       </property>
      </widget>
     </item>
-    <item row="3" column="0" colspan="5">
+    <item row="4" column="0" colspan="5">
      <widget class="QTableWidget" name="playlistTable">
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -104,6 +104,13 @@
       <column/>
       <column/>
       <column/>
+     </widget>
+    </item>
+    <item row="3" column="0" colspan="5">
+     <widget class="QSlider" name="horizontalSlider">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
      </widget>
     </item>
    </layout>

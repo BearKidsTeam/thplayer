@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         main.cpp \
         mainwindow.cpp \
-    fmtfile.cpp
+    fmtfile.cpp \
+    boundedbuffer.cpp
 
 HEADERS += \
         mainwindow.h \
-    fmtfile.h
+    fmtfile.h \
+    boundedbuffer.hpp
 
 FORMS += \
         mainwindow.ui
