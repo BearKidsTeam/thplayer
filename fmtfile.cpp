@@ -1,4 +1,4 @@
-#include "fmtfile.h"
+#include "fmtfile.hpp"
 #include <QFileInfo>
 #include <QDebug>
 

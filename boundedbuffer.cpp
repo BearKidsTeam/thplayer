@@ -3,8 +3,8 @@
 
 BoundedBuffer::BoundedBuffer(unsigned _cap)
 {
-	cap=_cap;cnt=l=r=0;
-	buf=new char[cap];
+	capacity=_cap;cnt=l=r=0;
+	buf=new char[capacity];
 }
 BoundedBuffer::~BoundedBuffer()
 {
@@ -18,14 +18,14 @@ qint64 BoundedBuffer::readData(char *data,qint64 maxlen)
 	read_ready.wait(lck,[this]{return cnt!=0||!bufopen;});
 	if(!bufopen){lck.unlock();return 0;}
 	qint64 ret=maxlen;if(cnt<ret)ret=cnt;
-	if(l+ret<cap)
+	if(l+ret<capacity)
 		memcpy(data,buf+l,ret);
 	else
 	{
-		memcpy(data,buf+l,cap-l);
-		memcpy(data+cap-l,buf,ret-cap+l);
+		memcpy(data,buf+l,capacity-l);
+		memcpy(data+capacity-l,buf,ret-capacity+l);
 	}
-	l+=ret;l%=cap;
+	l+=ret;l%=capacity;
 	cnt-=ret;
 	lck.unlock();
 	write_ready.notify_one();
@@ -36,17 +36,17 @@ qint64 BoundedBuffer::writeData(const char *data,qint64 len)
 {
 	if(!bufopen)return 0;
 	std::unique_lock<std::mutex> lck(lock);
-	write_ready.wait(lck,[this,len]{return cnt+len<cap||!bufopen;});
+	write_ready.wait(lck,[this,len]{return cnt+len<capacity||!bufopen;});
 	if(!bufopen){lck.unlock();return 0;}
-	qint64 ret=len;if(cnt+ret>cap)ret=cap-cnt;
-	if(r+ret<cap)
+	qint64 ret=len;if(cnt+ret>capacity)ret=capacity-cnt;
+	if(r+ret<capacity)
 		memcpy(buf+r,data,len);
 	else
 	{
-		memcpy(buf+r,data,cap-r);
-		memcpy(buf,data+cap-r,ret-cap+r);
+		memcpy(buf+r,data,capacity-r);
+		memcpy(buf,data+capacity-r,ret-capacity+r);
 	}
-	r+=ret;r%=cap;
+	r+=ret;r%=capacity;
 	cnt+=ret;
 	lck.unlock();
 	read_ready.notify_one();

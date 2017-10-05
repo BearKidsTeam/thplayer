@@ -8,7 +8,7 @@
 #include <QBuffer>
 #include <QTimer>
 #include <thread>
-#include "fmtfile.h"
+#include "fmtfile.hpp"
 #include "boundedbuffer.hpp"
 
 namespace Ui {
@@ -31,14 +31,16 @@ private:
 	Ui::MainWindow *ui;
 	FmtFile fmt;
 	FILE* bgmdat;
-	std::thread *playerth;
-	bool cont;
+	std::thread *playerThreadHandler;
+	bool loopEnabled;
 	int songIdx;
 	QAudioOutput* audioOutput=nullptr;
 	BoundedBuffer *audio_buffer=NULL;
-	QAudioFormat getAudioFormat();
+	QAudioFormat getAudioFormat(unsigned rate);
+	int thVersionDetect(QString str);
 	void setPlayListTableHeader();
 	void updateWidgets();
+	void play(int index = -1);
 	void stop();
 
 private slots:
@@ -47,6 +49,7 @@ private slots:
 	void dropEvent(QDropEvent* event);
 	void on_playButton_clicked();
 	void on_playlistTable_doubleClicked(const QModelIndex &index);
+	void on_loopButton_clicked();
 };
 
 #endif // MAINWINDOW_H

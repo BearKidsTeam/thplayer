@@ -10,7 +10,7 @@ class BoundedBuffer:public QIODevice
 {
 	private:
 		char* buf;
-		unsigned cap;
+		unsigned capacity;
 		unsigned l,r,cnt;
 		bool bufopen;
 		std::mutex lock;

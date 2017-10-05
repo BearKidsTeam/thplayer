@@ -30,9 +30,9 @@ SOURCES += \
     boundedbuffer.cpp
 
 HEADERS += \
-        mainwindow.h \
-    fmtfile.h \
-    boundedbuffer.hpp
+    boundedbuffer.hpp \
+    mainwindow.hpp \
+    fmtfile.hpp
 
 FORMS += \
         mainwindow.ui

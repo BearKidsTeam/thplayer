@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>508</width>
+    <width>530</width>
     <height>350</height>
    </rect>
   </property>
@@ -18,62 +18,14 @@
   </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
-    <item row="2" column="0">
+    <item row="3" column="0">
      <widget class="QPushButton" name="playButton">
       <property name="text">
        <string>Play</string>
       </property>
      </widget>
     </item>
-    <item row="2" column="3">
-     <spacer name="horizontalSpacer">
-      <property name="orientation">
-       <enum>Qt::Horizontal</enum>
-      </property>
-      <property name="sizeHint" stdset="0">
-       <size>
-        <width>40</width>
-        <height>20</height>
-       </size>
-      </property>
-     </spacer>
-    </item>
-    <item row="2" column="1">
-     <widget class="QPushButton" name="prevButton">
-      <property name="text">
-       <string>Prev</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="2">
-     <widget class="QPushButton" name="nextButton">
-      <property name="text">
-       <string>Next</string>
-      </property>
-     </widget>
-    </item>
-    <item row="2" column="4">
-     <widget class="QPushButton" name="loopButton">
-      <property name="text">
-       <string>Loop</string>
-      </property>
-     </widget>
-    </item>
-    <item row="0" column="0" colspan="5">
-     <widget class="QLabel" name="thnameLabel">
-      <property name="text">
-       <string>No file loaded...</string>
-      </property>
-     </widget>
-    </item>
-    <item row="1" column="0" colspan="5">
-     <widget class="QLabel" name="songnameLabel">
-      <property name="text">
-       <string>No song is playing...</string>
-      </property>
-     </widget>
-    </item>
-    <item row="4" column="0" colspan="5">
+    <item row="5" column="0" colspan="5">
      <widget class="QTableWidget" name="playlistTable">
       <property name="sizeAdjustPolicy">
        <enum>QAbstractScrollArea::AdjustToContents</enum>
@@ -88,7 +40,7 @@
        <bool>false</bool>
       </attribute>
       <attribute name="horizontalHeaderDefaultSectionSize">
-       <number>85</number>
+       <number>90</number>
       </attribute>
       <attribute name="horizontalHeaderMinimumSectionSize">
        <number>21</number>
@@ -106,10 +58,58 @@
       <column/>
      </widget>
     </item>
-    <item row="3" column="0" colspan="5">
+    <item row="2" column="0" colspan="5">
      <widget class="QSlider" name="horizontalSlider">
       <property name="orientation">
        <enum>Qt::Horizontal</enum>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="2">
+     <widget class="QPushButton" name="nextButton">
+      <property name="text">
+       <string>Next</string>
+      </property>
+     </widget>
+    </item>
+    <item row="0" column="0" colspan="5">
+     <widget class="QLabel" name="thnameLabel">
+      <property name="text">
+       <string>No file loaded...</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="1">
+     <widget class="QPushButton" name="prevButton">
+      <property name="text">
+       <string>Prev</string>
+      </property>
+     </widget>
+    </item>
+    <item row="1" column="0" colspan="5">
+     <widget class="QLabel" name="songnameLabel">
+      <property name="text">
+       <string>No song is playing...</string>
+      </property>
+     </widget>
+    </item>
+    <item row="3" column="3">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="3" column="4">
+     <widget class="QPushButton" name="loopButton">
+      <property name="text">
+       <string>Loop: On</string>
       </property>
      </widget>
     </item>
@@ -120,12 +120,11 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>508</width>
+     <width>530</width>
      <height>23</height>
     </rect>
    </property>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>
