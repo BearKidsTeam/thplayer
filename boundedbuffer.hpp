@@ -10,14 +10,15 @@ class BoundedBuffer:public QIODevice
 {
 	private:
 		char* buf;
-		unsigned capacity;
+		unsigned cap;
 		unsigned l,r,cnt;
 		bool bufopen;
 		std::mutex lock;
 		std::condition_variable write_ready,read_ready;
 	public:
-		BoundedBuffer(unsigned _cap=65536);
+		BoundedBuffer(unsigned capacity=65536);
 		virtual ~BoundedBuffer();
+		void clear();
 		qint64 readData(char *data,qint64 maxlen);
 		qint64 writeData(const char *data,qint64 len);
 		qint64 size()const;

@@ -14,7 +14,12 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
-	playerThreadHandler = nullptr;
+	streamerThread = nullptr;
+	timer=new QTimer();
+	timer->setInterval(100);
+	connect(timer,SIGNAL(timeout()),this,SLOT(updateWidgets()));
+	connect(ui->progressslider,SIGNAL(sliderReleased()),this,SLOT(seek()));
+	timer->start();
 }
 
 /*!    \brief  Load file.
@@ -100,7 +105,12 @@ bool MainWindow::LoadFile(QString filepath)
 				datFileState = FILE_LOADED;
 				// fall through
 			case FILE_LOADED:
+#ifndef _WIN32
 				bgmdat=fopen(fmt.thbgmFilePath.toStdString().c_str(),"rb");
+#else
+
+				bgmdat=_wfopen(fmt.thbgmFilePath.toStdWString().c_str(),L"rb");
+#endif
 		}
 	} while (fmtFileState != FILE_LOADED || datFileState != FILE_LOADED);
 
@@ -150,19 +160,19 @@ MainWindow::~MainWindow()
 
 void MainWindow::stop()
 {
-	loopEnabled = false;
-	if(audio_buffer)audio_buffer->close();
-	if(playerThreadHandler){
-		playerThreadHandler->join();
-		delete playerThreadHandler;
-		playerThreadHandler = nullptr;
+	stopStreamer = true;
+	if(audioBuffer)audioBuffer->close();
+	if(streamerThread){
+		streamerThread->join();
+		delete streamerThread;
+		streamerThread = nullptr;
 	}
 	if (audioOutput) {
 		audioOutput->stop();
 		delete audioOutput;
-		delete audio_buffer;
+		delete audioBuffer;
 		audioOutput = nullptr;
-		audio_buffer = nullptr;
+		audioBuffer = nullptr;
 	}
 }
 
@@ -179,6 +189,24 @@ void MainWindow::dropEvent(QDropEvent* event)
 	if(urls.isEmpty()) return;
 	QString fileName = urls.first().toLocalFile();
 	LoadFile(fileName);
+}
+
+void MainWindow::updateWidgets()
+{
+	if(!bgmdat)return;
+	if(!cursong.length)return;
+	long pos=ftell(bgmdat)-(long)audioBuffer->size();
+	if(pos<0)pos+=(-1*pos/(cursong.length-cursong.loopStart)+1)*(cursong.length-cursong.loopStart);
+	long spos=pos-cursong.start;
+	ui->progressslider->setValue((int)100.*spos/cursong.length);
+}
+void MainWindow::seek()
+{
+	if(!bgmdat)return;
+	long spos=(long)(ui->progressslider->value()/100.*cursong.length);
+	if(spos%4)spos-=spos%4;
+	fseek(bgmdat,spos+cursong.start,SEEK_SET);
+	audioBuffer->clear();
 }
 
 void MainWindow::on_playButton_clicked()
@@ -220,16 +248,12 @@ void MainWindow::setPlayListTableHeader()
 
 void MainWindow::play(int index)
 {
+	int songIdx;
 	if (index != -1) songIdx = index;
 	if (songIdx < 0 || songIdx >= fmt.songCnt) return;
 
-	if (audioOutput != nullptr) {
-		audioOutput->stop();
-		delete audioOutput;
-		audioOutput = nullptr;
-	}
-
 	ui->songnameLabel->setText(fmt.songs[songIdx].name);
+	cursong=fmt.songs[songIdx];
 
 	// audio playback:
 	QAudioFormat desiredFormat1 = getAudioFormat(fmt.songs[songIdx].rate);
@@ -244,12 +268,12 @@ void MainWindow::play(int index)
 	stop();
 	audioOutput = new QAudioOutput(desiredFormat1, this);
 	audioOutput->setVolume(1.0);
-	audio_buffer=new BoundedBuffer(262144);
-	audio_buffer->open(QIODevice::ReadWrite);
+	audioBuffer=new BoundedBuffer(32768);
+	audioBuffer->open(QIODevice::ReadWrite);
 
-	audioOutput->start(audio_buffer);
-	loopEnabled = true;
-	playerThreadHandler = new std::thread(&MainWindow::playerThread,this);
+	audioOutput->start(audioBuffer);
+	stopStreamer=false;
+	streamerThread = new std::thread(&MainWindow::audioStreamer,this);
 }
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
@@ -257,32 +281,46 @@ void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 	play(index.row());
 }
 
-void MainWindow::playerThread()
+void MainWindow::audioStreamer()
 {
 	static const size_t buf_size=2048;
 	char* buf=new char[buf_size];
-	fseek(bgmdat,fmt.songs[songIdx].start,SEEK_SET);
-	for(int ll=fmt.songs[songIdx].loopStart;loopEnabled&&ll>0;ll-=buf_size)
+	fseek(bgmdat,cursong.start,SEEK_SET);
+	while(!stopStreamer)
 	{
-		size_t sz=fread(buf,1,std::min(ll,(int)buf_size),bgmdat);
-		if(!loopEnabled)break;
-		audio_buffer->write(buf,sz);
+		long curpos=ftell(bgmdat);
+		long songpos=curpos-cursong.start;
+		size_t byte_expected=std::min((long)buf_size,cursong.length-songpos);
+		size_t sz=fread(buf,1,byte_expected,bgmdat);
+		audioBuffer->write(buf,sz);
+		if(ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
+		fseek(bgmdat,cursong.start+cursong.loopStart,SEEK_SET);
 	}
-	while(loopEnabled)
-	{
-		fseek(bgmdat,fmt.songs[songIdx].start+fmt.songs[songIdx].loopStart,SEEK_SET);
-		for(int ll=fmt.songs[songIdx].length-fmt.songs[songIdx].loopStart;loopEnabled&&ll>0;ll-=buf_size)
-		{
-			size_t sz=fread(buf,1,std::min(ll,(int)buf_size),bgmdat);
-			if(!loopEnabled)break;
-			audio_buffer->write(buf,sz);
-		}
-	}
+	delete[] buf;
 }
 
 void MainWindow::on_loopButton_clicked()
 {
-	// TODO: Lazy work, NOT thread safe!
-	loopEnabled = !loopEnabled;
-	ui->loopButton->setText(loopEnabled ? tr("Loop: On") : tr("Loop: Off"));
+	// TODO: ???
+	// ui->loopButton->setText(loopEnabled ? tr("Loop: On") : tr("Loop: Off"));
+}
+
+void MainWindow::on_prevButton_clicked()
+{
+	int r=ui->playlistTable->currentRow();
+	int c=ui->playlistTable->currentColumn();
+	int rc=ui->playlistTable->rowCount();
+	r=(r+rc-1)%rc;
+	ui->playlistTable->setCurrentCell(r,c);
+	play(r);
+}
+
+void MainWindow::on_nextButton_clicked()
+{
+	int r=ui->playlistTable->currentRow();
+	int c=ui->playlistTable->currentColumn();
+	int rc=ui->playlistTable->rowCount();
+	r=(r+1)%rc;
+	ui->playlistTable->setCurrentCell(r,c);
+	play(r);
 }

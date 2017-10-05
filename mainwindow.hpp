@@ -7,6 +7,7 @@
 #include <QAudioOutput>
 #include <QBuffer>
 #include <QTimer>
+#include <QSlider>
 #include <thread>
 #include "fmtfile.hpp"
 #include "boundedbuffer.hpp"
@@ -14,6 +15,24 @@
 namespace Ui {
 class MainWindow;
 }
+
+class QClickableSlider:public QSlider
+{
+	Q_OBJECT
+	public:
+		explicit QClickableSlider(QWidget *parent=0):QSlider(parent){}
+	protected:
+		void mouseReleaseEvent(QMouseEvent *e)
+		{
+			QSlider::mouseReleaseEvent(e);
+			if(e->buttons()^Qt::LeftButton)
+			{
+				double p=e->pos().x()/(double)width();
+				setValue(p*(maximum()-minimum())+minimum());
+				emit sliderReleased();
+			}
+		}
+};
 
 class MainWindow : public QMainWindow
 {
@@ -23,33 +42,37 @@ public:
 	explicit MainWindow(QWidget *parent = 0);
 	bool LoadFile(QString filepath);
 	bool LoadFmtFile(QString filepath, bool ignoreAnUint);
-	void playerThread();
 	~MainWindow();
 
 private:
 	unsigned loopStart;
 	Ui::MainWindow *ui;
 	FmtFile fmt;
-	FILE* bgmdat;
-	std::thread *playerThreadHandler;
-	bool loopEnabled;
-	int songIdx;
+	FILE* bgmdat=nullptr;
+	std::thread *streamerThread;
+	bool stopStreamer;
+	song_t cursong;
 	QAudioOutput* audioOutput=nullptr;
-	BoundedBuffer *audio_buffer=NULL;
+	BoundedBuffer *audioBuffer=nullptr;
 	QAudioFormat getAudioFormat(unsigned rate);
+	QTimer *timer;
 	int thVersionDetect(QString str);
 	void setPlayListTableHeader();
-	void updateWidgets();
 	void play(int index = -1);
 	void stop();
+	void audioStreamer();
 
 private slots:
 	// drag n drop
 	void dragEnterEvent(QDragEnterEvent *event);
 	void dropEvent(QDropEvent* event);
+	void updateWidgets();
+	void seek();
 	void on_playButton_clicked();
 	void on_playlistTable_doubleClicked(const QModelIndex &index);
 	void on_loopButton_clicked();
+	void on_prevButton_clicked();
+	void on_nextButton_clicked();
 };
 
 #endif // MAINWINDOW_H
