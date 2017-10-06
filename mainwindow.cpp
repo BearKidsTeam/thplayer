@@ -229,7 +229,7 @@ QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 
 int MainWindow::thVersionDetect(QString str)
 {
-	QRegExp rx("th(\\d{2})");
+    QRegExp rx("[Tt][Hh](\\d{2})");
 	int pos = rx.indexIn(str);
 	if (pos == -1) return -1;
 	QStringList list = rx.capturedTexts();
@@ -290,10 +290,10 @@ void MainWindow::audioStreamer()
 	{
 		long curpos=ftell(bgmdat);
 		long songpos=curpos-cursong.start;
-		size_t byte_expected=std::min((long)buf_size,cursong.length-songpos);
+        size_t byte_expected=std::min((long)buf_size,(long)cursong.length-songpos);
 		size_t sz=fread(buf,1,byte_expected,bgmdat);
 		audioBuffer->write(buf,sz);
-		if(ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
+        if((unsigned)ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
 		fseek(bgmdat,cursong.start+cursong.loopStart,SEEK_SET);
 	}
 	delete[] buf;
