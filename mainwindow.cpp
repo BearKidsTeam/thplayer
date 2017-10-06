@@ -67,7 +67,9 @@ bool MainWindow::LoadFile(QString filepath)
 			case NOT_LOADED:
 				fmtFileInfo.setFile(fileDir, tr("thbgm.fmt")); // try load
 				if (!fmtFileInfo.exists() || !fmtFileInfo.isFile()) {
-					fmtFileInfo.setFile(QFileDialog::getOpenFileName(this,"Open fmt file"));
+					QString tmpFileName = QFileDialog::getOpenFileName(this,"Open fmt file");
+					if(tmpFileName.isEmpty() || tmpFileName.isNull()) return false;
+					fmtFileInfo.setFile(tmpFileName);
 				}
 				// fall through
 			case PROCESSING:
@@ -96,7 +98,9 @@ bool MainWindow::LoadFile(QString filepath)
 			case NOT_LOADED:
 				datFileInfo.setFile(fileDir, tr("thbgm.dat")); // try load
 				if (!datFileInfo.exists() || !datFileInfo.isFile()) {
-					datFileInfo.setFile(QFileDialog::getOpenFileName(this,"Open dat file"));
+					QString tmpFileName = QFileDialog::getOpenFileName(this,"Open dat file");
+					if(tmpFileName.isEmpty() || tmpFileName.isNull()) return false;
+					datFileInfo.setFile(tmpFileName);
 				}
 				// fall through
 			case PROCESSING:
@@ -229,7 +233,7 @@ QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 
 int MainWindow::thVersionDetect(QString str)
 {
-    QRegExp rx("[Tt][Hh](\\d{2})");
+	QRegExp rx("[Tt][Hh](\\d{2})");
 	int pos = rx.indexIn(str);
 	if (pos == -1) return -1;
 	QStringList list = rx.capturedTexts();
@@ -290,10 +294,10 @@ void MainWindow::audioStreamer()
 	{
 		long curpos=ftell(bgmdat);
 		long songpos=curpos-cursong.start;
-        size_t byte_expected=std::min((long)buf_size,(long)cursong.length-songpos);
+		size_t byte_expected=std::min((long)buf_size,(long)cursong.length-songpos);
 		size_t sz=fread(buf,1,byte_expected,bgmdat);
 		audioBuffer->write(buf,sz);
-        if((unsigned)ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
+		if((unsigned)ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
 		fseek(bgmdat,cursong.start+cursong.loopStart,SEEK_SET);
 	}
 	delete[] buf;
