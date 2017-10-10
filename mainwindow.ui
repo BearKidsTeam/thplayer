@@ -16,6 +16,10 @@
   <property name="windowTitle">
    <string>TouHou Player</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="res.qrc">
+    <normaloff>:/icon/assets/thplayer.ico</normaloff>:/icon/assets/thplayer.ico</iconset>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout">
     <item row="3" column="0">
@@ -121,7 +125,7 @@
      <x>0</x>
      <y>0</y>
      <width>530</width>
-     <height>23</height>
+     <height>22</height>
     </rect>
    </property>
   </widget>
@@ -134,6 +138,8 @@
    <header>mainwindow.hpp</header>
   </customwidget>
  </customwidgets>
- <resources/>
+ <resources>
+  <include location="res.qrc"/>
+ </resources>
  <connections/>
 </ui>
