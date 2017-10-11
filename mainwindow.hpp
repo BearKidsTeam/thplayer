@@ -9,8 +9,9 @@
 #include <QTimer>
 #include <QSlider>
 #include <thread>
-#include "fmtfile.hpp"
+#include "songlist.hpp"
 #include "boundedbuffer.hpp"
+#include "thdatwrapper.hpp"
 
 namespace Ui {
 class MainWindow;
@@ -41,13 +42,13 @@ class MainWindow : public QMainWindow
 public:
 	explicit MainWindow(QWidget *parent = 0);
 	bool LoadFile(QString filepath);
-	bool LoadFmtFile(QString filepath, bool ignoreAnUint);
+	bool SetupSongList();
 	~MainWindow();
 
 private:
 	unsigned loopStart;
 	Ui::MainWindow *ui;
-	FmtFile fmt;
+	SongList songs;
 	FILE* bgmdat=nullptr;
 	std::thread *streamerThread;
 	bool stopStreamer;
@@ -56,6 +57,7 @@ private:
 	BoundedBuffer *audioBuffer=nullptr;
 	QAudioFormat getAudioFormat(unsigned rate);
 	QTimer *timer;
+	thDatWrapper *datw;
 	int thVersionDetect(QString str);
 	void setPlayListTableHeader();
 	void play(int index = -1);

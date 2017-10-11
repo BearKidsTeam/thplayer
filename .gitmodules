@@ -1,0 +1,3 @@
+[submodule "thtk"]
+	path = thtk
+	url = https://github.com/thpatch/thtk.git

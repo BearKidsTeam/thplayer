@@ -24,18 +24,50 @@ DEFINES += QT_DEPRECATED_WARNINGS
 
 
 SOURCES += \
-        main.cpp \
-        mainwindow.cpp \
-    fmtfile.cpp \
-    boundedbuffer.cpp
+    main.cpp \
+    mainwindow.cpp \
+    boundedbuffer.cpp \
+    thtk/thtk/bits.c \
+    thtk/thtk/error.c \
+    thtk/thtk/io.c \
+    thtk/thtk/rng_mt.c \
+    thtk/thtk/thcrypt.c \
+    thtk/thtk/thcrypt105.c \
+    thtk/thtk/thdat.c \
+    thtk/thtk/thdat02.c \
+    thtk/thtk/thdat06.c \
+    thtk/thtk/thdat08.c \
+    thtk/thtk/thdat95.c \
+    thtk/thtk/thdat105.c \
+    thtk/thtk/thlzss.c \
+    thtk/thtk/thrle.c \
+    thtk/thtk/util.c \
+    thdatwrapper.cpp \
+    songlist.cpp
 
 HEADERS += \
     boundedbuffer.hpp \
     mainwindow.hpp \
-    fmtfile.hpp
+    thtk/thtk/bits.h \
+    thtk/thtk/dat.h \
+    thtk/thtk/error.h \
+    thtk/thtk/io.h \
+    thtk/thtk/rng_mt.h \
+    thtk/thtk/thcrypt.h \
+    thtk/thtk/thcrypt105.h \
+    thtk/thtk/thdat.h \
+    thtk/thtk/thlzss.h \
+    thtk/thtk/thrle.h \
+    thtk/thtk/thtk.h \
+    thtk/thtk/util.h \
+    thdatwrapper.hpp \
+    songlist.hpp
 
 FORMS += \
         mainwindow.ui
 
 RESOURCES += \
     res.qrc
+INCLUDEPATH += \
+    thtk \
+    thtk-config

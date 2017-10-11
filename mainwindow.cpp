@@ -1,6 +1,7 @@
 #include "mainwindow.hpp"
 #include "ui_mainwindow.h"
 #include <cstdio>
+#include <cstring>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
@@ -14,6 +15,9 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui(new Ui::MainWindow)
 {
 	ui->setupUi(this);
+	setPlayListTableHeader();
+	ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+	datw=nullptr;
 	streamerThread = nullptr;
 	timer=new QTimer();
 	timer->setInterval(100);
@@ -24,135 +28,82 @@ MainWindow::MainWindow(QWidget *parent) :
 
 /*!    \brief  Load file.
  *
- *    Load any loadable file, thbgm.fmt and thbgm.dat for most of case.
- *    should try to auto detect touhou version to avoid pop-up.
+ *    Loads the game folder or any file in the folder.
+ *    Determine game version.
+ *    Returns true on success.
  */
 bool MainWindow::LoadFile(QString filepath)
 {
-	QFileInfo fileInfo(filepath);
-	if (!fileInfo.exists() || !fileInfo.isFile()) {
+	QUrl url(filepath);
+	if(QFileInfo(filepath).isFile())
+		url=url.adjusted(QUrl::RemoveFilename);
+	QUrl bgmurl=QUrl(url.url()+"/thbgm.dat");
+	songs.thbgmFilePath=bgmurl.url();
+	if(!QFileInfo(bgmurl.url()).isFile())
 		return false;
+	QDir gamedir=QDir(url.url());
+	QStringList sl;
+	sl<<"*.dat";
+	QFileInfoList fil=gamedir.entryInfoList(sl,QDir::NoFilter,QDir::Name);
+	QString datf="";
+	int ver=-1;
+	for(auto&i:fil)
+	{
+		if(~(ver=thVersionDetect(i.fileName())))
+		{datf=i.absoluteFilePath();break;}
 	}
-
-	bool fmtIgnoreAnUint = true;
-	int thVersion = thVersionDetect(filepath);
-	enum ProcState { NOT_LOADED, PROCESSING, FILE_LOADED };
-	ProcState fmtFileState = NOT_LOADED;
-	ProcState datFileState = NOT_LOADED;
-	QFileInfo fmtFileInfo, datFileInfo;
-	QDir fileDir = fileInfo.absoluteDir();
-
-	if (fileInfo.suffix() == tr("fmt")) {
-		fmtFileInfo = fileInfo;
-		fmtFileState = PROCESSING;
-	} else if (fileInfo.suffix() == tr("dat")) {
-		bool tryLoad = true;
-		if (fileInfo.fileName() != tr("thbgm.dat")) {
-			QMessageBox::StandardButton userClicked;
-			userClicked = QMessageBox::information(this, "Info!", tr("The file you choosen seems not `thbgm.dat`, Still load this file?\n") +
-												   tr("If you choose No, we will try to load `thbgm.dat` if file exist."),
-												   QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-			if (userClicked == QMessageBox::No) {
-				tryLoad = false;
-			}
-		}
-		if (tryLoad) {
-			datFileInfo = fileInfo;
-			datFileState = PROCESSING;
-		}
-	}
-
-	do {
-		switch (fmtFileState) {
-			case NOT_LOADED:
-				fmtFileInfo.setFile(fileDir, tr("thbgm.fmt")); // try load
-				if (!fmtFileInfo.exists() || !fmtFileInfo.isFile()) {
-					QString tmpFileName = QFileDialog::getOpenFileName(this,"Open fmt file");
-					if(tmpFileName.isEmpty() || tmpFileName.isNull()) return false;
-					fmtFileInfo.setFile(tmpFileName);
-				}
-				// fall through
-			case PROCESSING:
-				// TODO: if detect failed, ask for ignoreAnUint
-				if (thVersion == -1) thVersion = thVersionDetect(fmtFileInfo.absoluteFilePath());
-				if (thVersion == -1) {
-					QMessageBox::StandardButton userClicked;
-					userClicked = QMessageBox::information(this, "Info!", tr("Did the `thbgm.fmt` use the newer format?\n") +
-														   tr("If you don't know what did this means, click Yes if Touhou version >= 13."),
-														   QMessageBox::Yes | QMessageBox::No, QMessageBox::No);
-					fmtIgnoreAnUint = (userClicked == QMessageBox::Yes);
-				} else {
-					fmtIgnoreAnUint = thVersion >= 13 ? true : false;
-				}
-				if (!LoadFmtFile(fmtFileInfo.absoluteFilePath(), fmtIgnoreAnUint)) {
-					fmtFileState = NOT_LOADED;
-					break;
-				}
-				fmtFileState = FILE_LOADED;
-				// fall through
-			case FILE_LOADED:
-				ui->thnameLabel->setText(fmtFileInfo.fileName());
-		}
-
-		switch (datFileState) {
-			case NOT_LOADED:
-				datFileInfo.setFile(fileDir, tr("thbgm.dat")); // try load
-				if (!datFileInfo.exists() || !datFileInfo.isFile()) {
-					QString tmpFileName = QFileDialog::getOpenFileName(this,"Open dat file");
-					if(tmpFileName.isEmpty() || tmpFileName.isNull()) return false;
-					datFileInfo.setFile(tmpFileName);
-				}
-				// fall through
-			case PROCESSING:
-				// TODO: if detect failed, ask for ignoreAnUint
-				fmt.thbgmFilePath = datFileInfo.absoluteFilePath();
-				datFileState = FILE_LOADED;
-				// fall through
-			case FILE_LOADED:
-#ifndef _WIN32
-				bgmdat=fopen(fmt.thbgmFilePath.toStdString().c_str(),"rb");
+	if(!datf.length())return false;
+#ifdef _WIN32
+	int size=WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,0,0,0,0);
+	char* c=(char*)calloc(size,sizeof(char));
+	WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,c,size,0,0);
+	bgmdat=_wfopen(songs.thbgmFilePath.toStdWString().c_str(),L"rb");
 #else
-
-				bgmdat=_wfopen(fmt.thbgmFilePath.toStdWString().c_str(),L"rb");
+	char* c=(char*)calloc(datf.toStdString().length()+1,sizeof(char));
+	strncpy(c,datf.toStdString().c_str(),datf.toStdString().length()+1);
+	bgmdat=fopen(songs.thbgmFilePath.toStdString().c_str(),"rb");
 #endif
-		}
-	} while (fmtFileState != FILE_LOADED || datFileState != FILE_LOADED);
-
+	stop();
+	if(datw)delete datw;
+	datw=new thDatWrapper(c,ver);
+	if(ver>50)ver/=10;//95,125,128,143 etc
+	songs.LoadFile(datw,ver<13?true:false);
+	free(c);
+	ui->thnameLabel->setText(url.url());
+	SetupSongList();
 	return true;
 }
 
-/*!    \brief  Load song data from thbgm.fmt file.
+/*!    \brief  Load song data from thbgm.songs file.
  *
- *    Call to load thbgm.fmt file.
- *    Then load song data from FmtFile to playlist table.
+ *    Call to load thbgm.songs file.
+ *    Then load song data from SongList to playlist table.
  */
-bool MainWindow::LoadFmtFile(QString filepath, bool ignoreAnUint)
+bool MainWindow::SetupSongList()
 {
-	if (fmt.LoadFile(filepath, ignoreAnUint)) {
-		ui->playlistTable->clear();
-		setPlayListTableHeader();
-		ui->playlistTable->setRowCount(fmt.songCnt);
-		ui->playlistTable->setSortingEnabled(false);
-		for (int i = 0; i < fmt.songCnt; i++) {
-			song_t* song = &fmt.songs[i];
-			QString fileName(song->name);
+	ui->playlistTable->clear();
+	setPlayListTableHeader();
+	ui->playlistTable->setRowCount(songs.songCnt);
+	ui->playlistTable->setSortingEnabled(false);
+	for (int i = 0; i < songs.songCnt; i++) {
+		song_t* song = &songs.songs[i];
+		QString fileName(song->filename);
 
-			QTableWidgetItem *itemName = new QTableWidgetItem(fileName);
-			QTableWidgetItem *itemStart = new QTableWidgetItem("0x"+QString::number(song->start,16));
-			QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x"+QString::number(song->loopStart,16));
-			QTableWidgetItem *itemLen = new QTableWidgetItem("0x"+QString::number(song->length,16));
-			QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(song->rate));
-			ui->playlistTable->setItem(i, 0, itemName);
-			ui->playlistTable->setItem(i, 1, itemStart);
-			ui->playlistTable->setItem(i, 2, itemLpSt);
-			ui->playlistTable->setItem(i, 3, itemLen);
-			ui->playlistTable->setItem(i, 4, itemRate);
-		}
-		ui->playlistTable->setSortingEnabled(true);
-		return true;
-	} else {
-		return false;
+		QTableWidgetItem *itemTitle = new QTableWidgetItem(song->title);
+		QTableWidgetItem *itemName = new QTableWidgetItem(fileName);
+		QTableWidgetItem *itemStart = new QTableWidgetItem("0x"+QString::number(song->start,16));
+		QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x"+QString::number(song->loopStart,16));
+		QTableWidgetItem *itemLen = new QTableWidgetItem("0x"+QString::number(song->length,16));
+		QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(song->rate));
+		ui->playlistTable->setItem(i, 0, itemTitle);
+		ui->playlistTable->setItem(i, 1, itemName);
+		ui->playlistTable->setItem(i, 2, itemStart);
+		ui->playlistTable->setItem(i, 3, itemLpSt);
+		ui->playlistTable->setItem(i, 4, itemLen);
+		ui->playlistTable->setItem(i, 5, itemRate);
 	}
+	ui->playlistTable->setSortingEnabled(true);
+	return true;
 }
 
 MainWindow::~MainWindow()
@@ -160,6 +111,7 @@ MainWindow::~MainWindow()
 	stop();
 	delete ui;
 	if(bgmdat)fclose(bgmdat);
+	if(datw)delete datw;
 }
 
 void MainWindow::stop()
@@ -199,6 +151,7 @@ void MainWindow::updateWidgets()
 {
 	if(!bgmdat)return;
 	if(!cursong.length)return;
+	if(!audioBuffer)return;
 	long pos=ftell(bgmdat)-(long)audioBuffer->size();
 	if(pos<0)pos+=(-1*pos/(cursong.length-cursong.loopStart)+1)*(cursong.length-cursong.loopStart);
 	long spos=pos-cursong.start;
@@ -215,10 +168,9 @@ void MainWindow::seek()
 
 void MainWindow::on_playButton_clicked()
 {
-	LoadFile(QFileDialog::getOpenFileName(this,"Open fmt or dat file"));
+	LoadFile(QFileDialog::getExistingDirectory(this,"Select game directory"));
 }
 
-// Audio format which thbgm.dat used: S16_LE 44100 stereo
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 {
 	QAudioFormat audioFormat;
@@ -233,7 +185,9 @@ QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 
 int MainWindow::thVersionDetect(QString str)
 {
-	QRegExp rx("[Tt][Hh](\\d{2})");
+	//QRegExp r06("[Mm][Dd].[Dd][Aa][Tt]");
+	//if(r06.indexIn(str))return 6;
+	QRegExp rx("^[Tt][Hh](\\d{2,3})");
 	int pos = rx.indexIn(str);
 	if (pos == -1) return -1;
 	QStringList list = rx.capturedTexts();
@@ -243,24 +197,26 @@ int MainWindow::thVersionDetect(QString str)
 
 void MainWindow::setPlayListTableHeader()
 {
-	ui->playlistTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Name"));
-	ui->playlistTable->setHorizontalHeaderItem(1, new QTableWidgetItem("Start"));
-	ui->playlistTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Loop"));
-	ui->playlistTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Length"));
-	ui->playlistTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Rate"));
+	ui->playlistTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Title"));
+	ui->playlistTable->setHorizontalHeaderItem(1, new QTableWidgetItem("File"));
+	ui->playlistTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Start"));
+	ui->playlistTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Loop"));
+	ui->playlistTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Length"));
+	ui->playlistTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Rate"));
 }
 
 void MainWindow::play(int index)
 {
 	int songIdx;
 	if (index != -1) songIdx = index;
-	if (songIdx < 0 || songIdx >= fmt.songCnt) return;
+	if (songIdx < 0 || songIdx >= songs.songCnt) return;
 
-	ui->songnameLabel->setText(fmt.songs[songIdx].name);
-	cursong=fmt.songs[songIdx];
+	ui->songnameLabel->setText(songs.songs[songIdx].title.length()?songs.songs[songIdx].title:songs.songs[songIdx].filename);
+	ui->commentTB->setText(songs.songs[songIdx].comment);
+	cursong=songs.songs[songIdx];
 
 	// audio playback:
-	QAudioFormat desiredFormat1 = getAudioFormat(fmt.songs[songIdx].rate);
+	QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
 
 	// TODO:
 	// output devices from QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)
