@@ -9,6 +9,10 @@
 #include <QTableWidgetItem>
 #include <QMessageBox>
 #include <QMimeData>
+#ifdef _WIN32
+#include <Windows.h>
+#undef min //Windows API breaks STL, shit.
+#endif
 
 MainWindow::MainWindow(QWidget *parent) :
 	QMainWindow(parent),
@@ -54,6 +58,8 @@ bool MainWindow::LoadFile(QString filepath)
 	}
 	if(!datf.length())return false;
 #ifdef _WIN32
+	std::wstring ws=datf.toStdWString();
+	const wchar_t* s=ws.c_str();
 	int size=WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,0,0,0,0);
 	char* c=(char*)calloc(size,sizeof(char));
 	WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,c,size,0,0);

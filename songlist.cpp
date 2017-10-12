@@ -13,6 +13,7 @@ SongList::SongList()
 bool SongList::LoadFile(QString filepath, bool ignoreAnUint)
 {
 	//left to be implemented by BLBLB
+	return false;
 }
 bool SongList::LoadFile(QBuffer *buf, bool ignoreAnUint)
 {
@@ -70,9 +71,9 @@ void SongList::LoadComment(thDatWrapper *datw)
 			{
 				if(!i.startsWith("No."))
 				{
-					if(!i.startsWith("♪"))
+					if(i[0].unicode()!=0x266A)//'♪'
 						pcur->first=i;
-						else pcur->first=i.right(i.length()-1);
+					else pcur->first=i.right(i.length()-1);
 				}
 			}
 			if(pcur->second.length())pcur->second+='\n';
