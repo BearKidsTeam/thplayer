@@ -3,9 +3,6 @@
 
 #include <thtk-config/config.h>
 #include <thtk/io.h>
-#ifdef __cplusplus //Well, but it's not my mistake..
-extern "C" {       //thtk/dat.h:146
-#endif
 #include <thtk/dat.h>
 
 class thDatWrapper
