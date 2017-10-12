@@ -71,3 +71,5 @@ RESOURCES += \
 INCLUDEPATH += \
     thtk \
     thtk-config
+
+RC_ICONS = assets/thplayer.ico
