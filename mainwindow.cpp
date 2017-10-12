@@ -21,6 +21,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->setupUi(this);
 	setPlayListTableHeader();
 	ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+	ui->playlistTable->setSortingEnabled(false);
 	datw=nullptr;
 	streamerThread = nullptr;
 	timer=new QTimer();
@@ -108,7 +109,7 @@ bool MainWindow::SetupSongList()
 		ui->playlistTable->setItem(i, 4, itemLen);
 		ui->playlistTable->setItem(i, 5, itemRate);
 	}
-	ui->playlistTable->setSortingEnabled(true);
+	//ui->playlistTable->setSortingEnabled(true);
 	return true;
 }
 
