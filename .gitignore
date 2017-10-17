@@ -3,3 +3,6 @@
 
 # Autosave
 *.autosave
+
+# Build Dir
+[Bb]uild/
