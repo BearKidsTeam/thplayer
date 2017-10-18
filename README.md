@@ -1,21 +1,27 @@
 # TouHou Player
 
+[Website](https://bearkidsteam.github.io/thplayer/)
+
 TouHou BGM player for all platform.
+
+*Please notice that `thplayer` doesn't support Mac for now.*
 
 ## Usage
 
 No need for config. Drag the TouHou game program into `thplayer` main window, or click the **Load** button and choose the game folder. `thplayer` will automatically load songs and then it's ready for use!
 
-## Support game versions
+## Supported game versions
 
 The Touhou game versions we support are: 
 
-th07, th08, th09, th10, th11, th12, th13, th14, th15, th16
+th07, th08, th09, th10, th11, th12, th13, th14, th15, th16  
 th095, th125, th128, th143
 
 This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/) project. Thanks!
 
 ## Build
+
+In order to build, you should get the source code first. We are using [thpatch/thtk](https://github.com/thpatch/thtk/) as a git submodule, since the *download as zip* option will **not** pack the submodules inside the zip file, you should use `git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git` instead.
 
 ### Build using `qmake`
 
@@ -34,7 +40,7 @@ After that, you'll get the runnable binary inside the build folder. Enjoy!
 
 ### Build manually
 
-To build it manually, get Qt open-source version from [qt.io](https://www.qt.io/download-open-source/) or from your package manager， install it and open `thplayer.pro` using QtCreator, and build it as you wish! 
+To build it manually, get Qt open-source version from [qt.io](https://www.qt.io/download-open-source/) or from your package manager, install it and open `thplayer.pro` using QtCreator, and build it as you wish! 
 
 ## License
 
