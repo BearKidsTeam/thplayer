@@ -10,21 +10,21 @@
 <div class="w3-bar w3-border w3-indigo">
 	<div class="w3-container">
 		<button class="w3-bar-item w3-indigo">TouHou Player</button>
-		<a href="#" class="w3-bar-item w3-button">Overview</a>
+		<a href="./index.html" class="w3-bar-item w3-button">Overview</a>
 		<a href="./screenshots.html" class="w3-bar-item w3-button">Screenshots</a>
-		<a href="./download.html" class="w3-bar-item w3-button">Download</a>
+		<a href="#" class="w3-bar-item w3-button">Download</a>
 		<a href="https://github.com/BearKidsTeam/thplayer" class="w3-bar-item w3-button w3-hover-black w3-right">GitHub</a>
 	</div>
 </div>
 	<div id="app1" class="w3-container">
 		<div class="w3-center">
-			<h1>TouHou Player</h1>
-			<img src="./img/thplayer.png" style="width:128px"><br/>
-			<p>Touhou BGM Player for all platform.</p>
+			<h1>TouHou Player :: Download</h1>
+			<img src="./img/thplayer.png" style="width:128px"><br/><br/>
 		</div>
 		<div class="w3-row w3-center">
-			<a href="./download.html" class="w3-btn w3-white w3-border w3-border-blue w3-round">Download</a>
-			<a href="https://github.com/BearKidsTeam/thplayer" class="w3-btn w3-white w3-border w3-border-blue w3-round">Source</a>
+			<button m-on:click="setos('windows')" class="w3-btn w3-white w3-border w3-border-blue w3-round">Windows</button>
+			<!--<button class="w3-btn w3-white w3-border w3-border-blue w3-round">Mac OSX</button>-->
+			<button m-on:click="setos('linux')" class="w3-btn w3-white w3-border w3-border-blue w3-round">Linux</button>
 		</div>
 		<div class="w3-row w3-center">
 			<hr/>
