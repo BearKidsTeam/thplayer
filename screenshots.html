@@ -4,6 +4,7 @@
 	<title>TouHou Player</title>
 	<link rel="icon" href="./favicon.ico" />
 	<link type="text/css" href="./w3.css" rel="stylesheet">
+	<link type="text/css" href="./site.css" rel="stylesheet">
 	<script src="./moon.min.js"></script>
 </head>
 <body>
@@ -27,8 +28,8 @@
 			<button m-on:click="setos('linux')" class="w3-btn w3-white w3-border w3-border-blue w3-round">Linux</button>
 		</div>
 		<div class="w3-row w3-center">
-			<img m-if="osname === 'windows'" src="./img/win.png" alt="Win"/>
-			<img m-if="osname === 'linux'" src="./img/linux.png" alt="Linux"/>
+			<img m-if="osname === 'windows'" src="./img/win.png" style="max-width: 100%" alt="Win"/>
+			<img m-if="osname === 'linux'" src="./img/linux.png" style="max-width: 100%" alt="Linux"/>
 		</div>
 	</div>
 	<div class="w3-container">

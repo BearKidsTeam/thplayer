@@ -1,0 +1,22 @@
+@media screen and (min-width: 1200px) {
+	.bl-container {
+		width: 1170px!important;
+	}
+}
+
+@media screen and (min-width: 992px) {
+	.bl-container {
+		width: 970px;
+	}
+}
+
+@media screen and (min-width: 768px) {
+	.bl-container {
+		width: 750px;
+	}
+}
+
+.bl-container {
+	margin-right: auto;
+	margin-left: auto;
+}

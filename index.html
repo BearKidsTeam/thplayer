@@ -4,6 +4,7 @@
 	<title>TouHou Player</title>
 	<link rel="icon" href="./favicon.ico" />
 	<link type="text/css" href="./w3.css" rel="stylesheet">
+	<link type="text/css" href="./site.css" rel="stylesheet">
 	<script src="./moon.min.js"></script>
 </head>
 <body>
@@ -26,18 +27,52 @@
 			<a href="./download.html" class="w3-btn w3-white w3-border w3-border-blue w3-round">Download</a>
 			<a href="https://github.com/BearKidsTeam/thplayer" class="w3-btn w3-white w3-border w3-border-blue w3-round">Source</a>
 		</div>
-		<div class="w3-row w3-center">
-			<hr/>
-			<div m-if="osname === 'windows'">
-				text for windows
+		<hr/>
+		<div class="w3-row bl-container"><!--?-->
+			<div m-if="osname === 'mac'">
+				<p><em>Please notice that <code>thplayer</code> doesn't support Mac for now.</em></p>
+				<p>If you would like to help us make it possible run under Mac, fell free to send us a Pull Request or patch!</p>
 			</div>
-			<div m-if="osname === 'linux'">
-				text for linux
-			</div>
+			<h2>Usage</h2>
+			<p>No need for config. Drag the TouHou game program into thplayer main window, or click the Load button and choose the game folder. thplayer will automatically load songs and then it's ready for use!</p>
+			<h2>Supported game versions</h2>
+			<p>The Touhou game versions we support are:</p>
+			<p>th07, th08, th09, th10, th11, th12, th13, th14, th15, th16<br>th095, th125, th128, th143</p>
+			<p>This is all made possible by the <a href="https://github.com/thpatch/thtk/">thpatch/thtk</a> project. Thanks!</p>
+			<h2>Build from source</h2>
+			<p>Please refer to GitHub: <a href="https://github.com/BearKidsTeam/thplayer">TouHou Player at GitHub!</a></p>
+			<h2>License (BSD 2-Clause)</h2>
+<pre><code>Redistribution and use in source and binary forms, with
+or without modification, are permitted provided that the
+following conditions are met:
+
+1. Redistributions of source code must retain this list
+   of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce this
+   list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the
+   distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
+CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED
+WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A
+PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT,
+INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.
+</code></pre>
 		</div>
 		<div class="w3-row w3-center">
-			<img m-if="osname === 'windows'" src="./img/win.png" alt="Win"/>
-			<img m-if="osname === 'linux'" src="./img/linux.png" alt="Linux"/>
+			<img m-if="osname === 'windows'" src="./img/win.png" style="max-width: 100%" alt="Win"/>
+			<img m-if="osname === 'linux'" src="./img/linux.png" style="max-width: 100%" alt="Linux"/>
 		</div>
 	</div>
 	<div class="w3-container">
