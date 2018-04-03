@@ -21,7 +21,7 @@ This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/
 
 ## Build
 
-In order to build, you should get the source code first. We are using [thpatch/thtk](https://github.com/thpatch/thtk/) as a git submodule, since the *download as zip* option will **not** pack the submodules inside the zip file, you should use `git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git` instead.
+In order to build, you should get the source code first. We are using [thpatch/thtk](https://github.com/thpatch/thtk/) as a git submodule, since the *download as zip* option will **not** pack the submodules inside the zip file, you should use `git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git` instead. (Forgot to use recursive while cloning? Try `git submodule update --init --recursive`)
 
 ### Build using `qmake`
 

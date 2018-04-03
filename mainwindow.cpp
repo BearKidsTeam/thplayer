@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent) :
 	timer->setInterval(100);
 	connect(timer,SIGNAL(timeout()),this,SLOT(updateWidgets()));
 	connect(ui->progressslider,SIGNAL(sliderReleased()),this,SLOT(seek()));
+    connect(ui->playlistTable, SIGNAL(customContextMenuRequested(const QPoint &)), this, SLOT(when_playlistTable_ContextMenuRequested(const QPoint &)));
 	timer->start();
 }
 
@@ -290,4 +291,14 @@ void MainWindow::on_nextButton_clicked()
 	r=(r+1)%rc;
 	ui->playlistTable->setCurrentCell(r,c);
 	play(r);
+}
+
+void MainWindow::when_playlistTable_ContextMenuRequested(const QPoint & pointer)
+{
+    QTableWidgetItem* item = ui->playlistTable->itemAt(pointer);
+    if (item != nullptr) {
+        QMenu menu;
+        menu.addAction("test:" + QString::number(item->row()));
+        menu.popup(pointer);
+    }
 }

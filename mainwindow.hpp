@@ -75,6 +75,7 @@ private slots:
 	void on_loopButton_clicked();
 	void on_prevButton_clicked();
 	void on_nextButton_clicked();
+    void when_playlistTable_ContextMenuRequested(const QPoint & pointer);
 };
 
 #endif // MAINWINDOW_H
