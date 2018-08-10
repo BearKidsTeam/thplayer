@@ -15,7 +15,7 @@ No need for config. Drag the TouHou game program into `thplayer` main window, or
 The Touhou game versions we support are: 
 
 th07, th08, th09, th10, th11, th12, th13, th14, th15, th16  
-th095, th125, th128, th143
+th095, th125, th128, th143, th165
 
 This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/) project. Thanks!
 
@@ -35,6 +35,8 @@ mkdir ./thplayer/build && cd $_
 # Build it
 qmake ../thplayer.pro && make && make clean
 ```
+
+(Tip: If you forget to use `--recurse-submodules` when you clone this repo, you need do `git submodule update --init --recursive` then)
 
 After that, you'll get the runnable binary inside the build folder. Enjoy!
 
