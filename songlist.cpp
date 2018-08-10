@@ -36,7 +36,6 @@ bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
 	QBuffer *buf=new QBuffer(arr,nullptr);
 	buf->open(QIODevice::ReadOnly);
 	LoadFile(buf,ignoreAnUint);
-	//TODO: load musiccmt.txt
 	delete buf;
 	delete arr;
 	LoadComment(datw);

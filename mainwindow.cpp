@@ -10,8 +10,8 @@
 #include <QMessageBox>
 #include <QMimeData>
 #ifdef _WIN32
+#define NOMINMAX //Windows API breaks STL, shit.
 #include <Windows.h>
-#undef min //Windows API breaks STL, shit.
 #endif
 
 MainWindow::MainWindow(QWidget *parent) :

@@ -8,6 +8,12 @@ thDatWrapper::thDatWrapper(const char *datpath,unsigned ver)
 	datf=thtk_io_open_file(datpath,"rb",&e);
 	thtk_error_free(&e);
 	dat=thdat_open(ver,datf,&e);
+	if(!dat)
+	//just try the latest supported version instead
+	{
+		thtk_error_free(&e);
+		dat=thdat_open(16,datf,&e);
+	}
 	thtk_error_free(&e);
 }
 ssize_t thDatWrapper::getFileSize(const char *path)
