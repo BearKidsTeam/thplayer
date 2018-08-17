@@ -6,3 +6,9 @@
 
 # Build Dir
 [Bb]uild/
+
+# Debian Build Helper
+debian/.debhelper/
+debian/thplayer/
+debian/tmp/
+*.debhelper.log

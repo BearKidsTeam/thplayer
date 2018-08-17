@@ -1,0 +1,6 @@
+thplayer (0.17-1) UNRELEASED; urgency=low
+
+  * Initial release. Closes: #nnnn
+    <nnnn is the bug number of your ITP>
+
+ -- blblb <wzc@localhost>  Fri, 17 Aug 2018 11:19:02 +0800
