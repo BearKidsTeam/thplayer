@@ -1,0 +1,9 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=TouHou Player
+Exec=/usr/bin/thplayer
+Icon=thplayer
+Comment=Touhou BGM Player for all platform.
+Categories=Audio;AudioVideo;Qt;
+Terminal=false
