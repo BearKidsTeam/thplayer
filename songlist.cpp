@@ -90,6 +90,7 @@ void SongList::LoadComment(thDatWrapper *datw)
 
 bool SongList::SongListReadGroup(QBuffer* buf, song_t &song)
 {
+	if(buf->size()-buf->pos()<52)return false;
 	char name[16];
 	for (int i = 0; i < 16; ++i) {
 		if (!buf->getChar(&name[i])) return false;
@@ -108,9 +109,7 @@ bool SongList::SongListReadGroup(QBuffer* buf, song_t &song)
 	}
 	song.rate = BEu32b(buf);
 	song.title=song.comment="";
-	for(int i = 1;i <= 12; ++i) {
-		if(!buf->getChar(0)) return false;
-	}
+	buf->seek(buf->pos()+12);
 	return true;
 }
 
