@@ -43,7 +43,8 @@ SOURCES += \
     thtk/thtk/thrle.c \
     thtk/thtk/util.c \
     thdatwrapper.cpp \
-    songlist.cpp
+    songlist.cpp \
+    outputselectiondialog.cpp
 
 HEADERS += \
     boundedbuffer.hpp \
@@ -61,10 +62,12 @@ HEADERS += \
     thtk/thtk/thtk.h \
     thtk/thtk/util.h \
     thdatwrapper.hpp \
-    songlist.hpp
+    songlist.hpp \
+    outputselectiondialog.hpp
 
 FORMS += \
-        mainwindow.ui
+        mainwindow.ui \
+    outputselectiondialog.ui
 
 unix {
     isEmpty(PREFIX) {

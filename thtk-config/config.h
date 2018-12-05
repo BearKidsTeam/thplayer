@@ -63,7 +63,12 @@
 # define PACK_ATTRIBUTE __attribute__((__packed__))
 # define PACK_BEGIN
 # define PACK_END
+#if ( __GLIBC__ >= 2 ) && ( __GLIBC_MINOR__ >= 1 )
+#ifndef _GNU_SOURCE
+# define _GNU_SOURCE
+#endif
 # define HAVE_MEMPCPY
+#endif
 
 #endif //_MSC_VER
 

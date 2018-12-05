@@ -9,6 +9,7 @@
 #include <QTableWidgetItem>
 #include <QMessageBox>
 #include <QMimeData>
+#include "outputselectiondialog.hpp"
 #ifdef _WIN32
 #define NOMINMAX //Windows API breaks STL, shit.
 #include <Windows.h>
@@ -24,11 +25,39 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->playlistTable->setSortingEnabled(false);
 	datw=nullptr;
 	streamerThread = nullptr;
+	devi=-1;
 	timer=new QTimer();
 	timer->setInterval(100);
 	connect(timer,SIGNAL(timeout()),this,SLOT(updateWidgets()));
 	connect(ui->progressslider,SIGNAL(sliderReleased()),this,SLOT(seek()));
 	timer->start();
+}
+bool MainWindow::args(QCommandLineParser& p)
+{
+	argp=&p;
+	if(argp->isSet("list-devices"))
+	{
+		printf("List of available output devices:\n");
+		printf("Device ID\tDevice Name\n");
+		int id=0;
+		for(auto& di:QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
+		{
+			printf("%d        \t%s\n",id++,di.deviceName().toStdString().c_str());
+		}
+		return true;
+	}
+	if(argp->isSet("device"))
+	{
+		bool ok=false;
+		int t=argp->value("device").toInt(&ok);
+		if(!ok){printf("--device: Number expected.\n");return true;}
+		if(t>=QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).size()||t<0)
+		{printf("--device: device ID out of range.\n");return true;}
+		devi=t;
+	}
+	if(argp->positionalArguments().size())
+		this->LoadFile(argp->positionalArguments()[0]);
+	return false;
 }
 
 /*!    \brief  Load file.
@@ -214,7 +243,7 @@ void MainWindow::setPlayListTableHeader()
 
 void MainWindow::play(int index)
 {
-	int songIdx;
+	int songIdx = -1;
 	if (index != -1) songIdx = index;
 	if (songIdx < 0 || songIdx >= songs.songCnt) return;
 
@@ -225,22 +254,28 @@ void MainWindow::play(int index)
 	// audio playback:
 	QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
 
-	// TODO:
-	// output devices from QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)
-	QAudioDeviceInfo info1(QAudioDeviceInfo::defaultOutputDevice());
+	QAudioDeviceInfo info1(
+		~devi?QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)[devi]
+		:QAudioDeviceInfo::defaultOutputDevice());
 	if (!info1.isFormatSupported(desiredFormat1)) {
 		qWarning() << "Default format not supported, trying to use the nearest.";
 		desiredFormat1 = info1.preferredFormat();
 	}
 	stop();
-	audioOutput = new QAudioOutput(desiredFormat1, this);
+	audioOutput = new QAudioOutput(info1,desiredFormat1, this);
 	audioOutput->setVolume(1.0);
 	audioBuffer=new BoundedBuffer(32768);
 	audioBuffer->open(QIODevice::ReadWrite);
 
-	audioOutput->start(audioBuffer);
 	stopStreamer=false;
 	streamerThread = new std::thread(&MainWindow::audioStreamer,this);
+	audioOutput->start(audioBuffer);
+	if(audioOutput->error())
+	{
+		OutputSelectionDialog d;
+		d.init(devi);d.exec();
+		devi=d.selection();play(index);
+	}
 }
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)

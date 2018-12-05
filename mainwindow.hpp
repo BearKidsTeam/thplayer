@@ -8,6 +8,7 @@
 #include <QBuffer>
 #include <QTimer>
 #include <QSlider>
+#include <QCommandLineParser>
 #include <thread>
 #include "songlist.hpp"
 #include "boundedbuffer.hpp"
@@ -43,6 +44,7 @@ public:
 	explicit MainWindow(QWidget *parent = 0);
 	bool LoadFile(QString filepath);
 	bool SetupSongList();
+	bool args(QCommandLineParser &p);
 	~MainWindow();
 
 private:
@@ -58,6 +60,8 @@ private:
 	QAudioFormat getAudioFormat(unsigned rate);
 	QTimer *timer;
 	thDatWrapper *datw;
+	QCommandLineParser *argp;
+	int devi;
 	int thVersionDetect(QString str);
 	void setPlayListTableHeader();
 	void play(int index = -1);
