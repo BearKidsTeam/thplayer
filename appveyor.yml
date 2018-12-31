@@ -17,6 +17,7 @@ build_script:
   - cd build
   - qmake ..\thplayer.pro
   - mingw32-make
+  - tree
+  - cd release
   - dir
-  - cd
-  - windeployqt --no-quick-import .\thplayer.exe
+  - windeployqt --no-quick-import  --release .\thplayer.exe
