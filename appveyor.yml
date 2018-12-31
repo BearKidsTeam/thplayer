@@ -1,0 +1,18 @@
+environment:
+  matrix:
+    - build_name: mingw53_32_qt5_11_2
+      QTPATH: C:\Qt\5.11.2\mingw53_32
+      MINGW32: C:\Qt\Tools\mingw530_32
+#    - build_name: msvc2017_64
+#      QTPATH: C:\Qt\5.11.2\msvc2017_64
+#      MINGW32: C:\Qt\Tools\mingw530_32
+
+install:
+  - set PATH=%PATH%;%QTDIR%\bin;%MINGW32%\bin
+
+build_script:
+  - mkdir build
+  - cd build
+  - qmake ..\thplayer.pro
+  - mingw32-make
+  - windeployqt --no-quick-import .\thplayer.exe
