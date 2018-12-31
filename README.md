@@ -1,5 +1,7 @@
 # TouHou Player
 
+[![Build status](https://ci.appveyor.com/api/projects/status/3hnd8quh22grg4gv/branch/master?svg=true)](https://ci.appveyor.com/project/BLumia/thplayer/branch/master)
+
 [Website](https://bearkidsteam.github.io/thplayer/)
 
 TouHou BGM player for all platform.
