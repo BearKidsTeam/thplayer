@@ -8,7 +8,7 @@ environment:
 #      MINGW32: C:\Qt\Tools\mingw530_32
 
 install:
-  - set PATH=%PATH%;%QTDIR%\bin;%MINGW32%\bin
+  - set PATH=%PATH%;%QTPATH%\bin;%MINGW32%\bin
 
 build_script:
   - mkdir build
