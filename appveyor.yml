@@ -21,4 +21,4 @@ build_script:
   - windeployqt --no-quick-import  --release .\thplayer.exe
 
 artifacts:
-  - path: %APPVEYOR_BUILD_FOLDER%\build\release
+  - path: build\release
