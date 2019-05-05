@@ -68,13 +68,28 @@ bool MainWindow::args(QCommandLineParser& p)
  */
 bool MainWindow::LoadFile(QString filepath)
 {
-	QUrl url(filepath);
-	if(QFileInfo(filepath).isFile())
+	QUrl url(filepath), bgmurl;
+	bool isTrial = false;
+	if(QFileInfo(filepath).isFile()) {
 		url=url.adjusted(QUrl::RemoveFilename);
-	QUrl bgmurl=QUrl(url.url()+"/thbgm.dat");
-	songs.thbgmFilePath=bgmurl.url();
-	if(!QFileInfo(bgmurl.url()).isFile())
+	}
+
+	if (QFile::exists(url.url()+"/thbgm.dat")) {
+		bgmurl = QUrl(url.url()+"/thbgm.dat");
+	} else if (QFile::exists(url.url()+"/thbgm_tr.dat")) {
+		isTrial = true;
+		bgmurl = QUrl(url.url()+"/thbgm_tr.dat");
+	} else {
 		return false;
+	}
+
+	if(!QFileInfo(bgmurl.url()).isFile()) {
+		return false;
+	}
+
+	songs.thbgmFilePath = bgmurl.url();
+	songs.isTrial = isTrial;
+
 	QDir gamedir=QDir(url.url());
 	QStringList sl;
 	sl<<"*.dat";

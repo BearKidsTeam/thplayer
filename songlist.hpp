@@ -19,6 +19,7 @@ public:
 	song_t songs[50];
 	int songCnt = 0;
 	QString thbgmFilePath = nullptr;
+	bool isTrial = false;
 	SongList();
 	bool LoadFile(QString filepath, bool ignoreAnUint = false);
 	bool LoadFile(QBuffer *buf, bool ignoreAnUint = false);

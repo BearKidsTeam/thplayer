@@ -16,7 +16,7 @@ No need for config. Drag the TouHou game program into `thplayer` main window, or
 
 The Touhou game versions we support are: 
 
-th07, th08, th09, th10, th11, th12, th13, th14, th15, th16  
+th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17tr  
 th095, th125, th128, th143, th165
 
 This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/) project. Thanks!

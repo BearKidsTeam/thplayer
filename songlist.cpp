@@ -28,11 +28,11 @@ bool SongList::LoadFile(QBuffer *buf, bool ignoreAnUint)
 }
 bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
 {
-	ssize_t sfmt=datw->getFileSize("thbgm.fmt");
+	ssize_t sfmt=datw->getFileSize(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt");
 	if(!~sfmt)return false;
 	QByteArray *arr=new QByteArray((int)(sfmt+1),'\0');
 	char* dat=arr->data();
-	datw->getFile("thbgm.fmt",dat);
+	datw->getFile(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt", dat);
 	QBuffer *buf=new QBuffer(arr,nullptr);
 	buf->open(QIODevice::ReadOnly);
 	LoadFile(buf,ignoreAnUint);
@@ -43,11 +43,11 @@ bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
 }
 void SongList::LoadComment(thDatWrapper *datw)
 {
-	ssize_t scmt=datw->getFileSize("musiccmt.txt");
+	ssize_t scmt=datw->getFileSize(isTrial ? "musiccmt_tr.txt" : "musiccmt.txt");
 	if(!~scmt)return;
 	QByteArray *arr=new QByteArray((int)(scmt+1),'\0');
 	char* dat=arr->data();
-	datw->getFile("musiccmt.txt",dat);
+	datw->getFile(isTrial ? "musiccmt_tr.txt" : "musiccmt.txt", dat);
 	QString s=QTextCodec::codecForName("Shift-JIS")->toUnicode(*arr);
 	std::map<QString,std::pair<QString,QString>> map;
 	QStringList sl=s.split('\n');
