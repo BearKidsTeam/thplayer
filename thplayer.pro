@@ -79,6 +79,10 @@ unix {
     QMAKE_CXXFLAGS += -std=c++11 -Wall
 }
 
+macx {
+    ICON = assets/thplayer.icns
+}
+
 RESOURCES += \
     res.qrc
 INCLUDEPATH += \

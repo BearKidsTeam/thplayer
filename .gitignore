@@ -12,3 +12,6 @@ debian/.debhelper/
 debian/thplayer/
 debian/tmp/
 *.debhelper.log
+
+# sh*tOS
+.DS_Store
