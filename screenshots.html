@@ -24,12 +24,13 @@
 		<div class="w3-row w3-center">
 			<hr/>
 			<button m-on:click="setos('windows')" class="w3-btn w3-white w3-border w3-border-blue w3-round">Windows</button>
-			<!--<button class="w3-btn w3-white w3-border w3-border-blue w3-round">Mac OSX</button>-->
+			<button m-on:click="setos('mac')" class="w3-btn w3-white w3-border w3-border-blue w3-round">macOS</button>
 			<button m-on:click="setos('linux')" class="w3-btn w3-white w3-border w3-border-blue w3-round">Linux</button>
 		</div>
 		<div class="w3-row w3-center">
-			<img m-if="osname === 'windows'" src="./img/win.png" style="max-width: 100%" alt="Win"/>
+			<img m-if="osname === 'windows'" src="./img/win.png" style="max-width: 100%" alt="Windows"/>
 			<img m-if="osname === 'linux'" src="./img/linux.png" style="max-width: 100%" alt="Linux"/>
+			<img m-if="osname === 'mac'" src="./img/macos.png" style="max-width: 100%" alt="macOS"/>
 		</div>
 	</div>
 	<div class="w3-container">
