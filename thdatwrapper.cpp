@@ -12,7 +12,7 @@ thDatWrapper::thDatWrapper(const char *datpath,unsigned ver)
 	//just try the latest supported version instead
 	{
 		thtk_error_free(&e);
-		dat=thdat_open(16,datf,&e);
+		dat=thdat_open(17,datf,&e);
 	}
 	thtk_error_free(&e);
 }
