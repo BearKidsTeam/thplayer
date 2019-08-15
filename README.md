@@ -6,8 +6,6 @@
 
 TouHou BGM player for all platform.
 
-*Please notice that `thplayer` doesn't support Mac for now.*
-
 ## Usage
 
 No need for config. Drag the TouHou game program into `thplayer` main window, or click the **Load** button and choose the game folder. `thplayer` will automatically load songs and then it's ready for use!
@@ -16,8 +14,12 @@ No need for config. Drag the TouHou game program into `thplayer` main window, or
 
 The Touhou game versions we support are: 
 
-th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17  
+``` plain
+th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17
 th095, th125, th128, th143, th165
+```
+
+Future TouHou releases should also supported as long as ZUN doesn't change the data format.
 
 This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/) project. Thanks!
 
