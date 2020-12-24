@@ -79,6 +79,8 @@ bool MainWindow::LoadFile(QString filepath)
 	} else if (QFile::exists(url.url()+"/thbgm_tr.dat")) {
 		isTrial = true;
 		bgmurl = QUrl(url.url()+"/thbgm_tr.dat");
+	} else if (QFile::exists(url.url()+"/albgm.dat")) {
+		bgmurl = QUrl(url.url()+"/albgm.dat");
 	} else {
 		return false;
 	}
@@ -236,14 +238,16 @@ QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 
 int MainWindow::thVersionDetect(QString str)
 {
-	//QRegExp r06("[Mm][Dd].[Dd][Aa][Tt]");
-	//if(r06.indexIn(str))return 6;
-	QRegExp rx("^[Tt][Hh](\\d{2,3})");
-	int pos = rx.indexIn(str);
-	if (pos == -1) return -1;
-	QStringList list = rx.capturedTexts();
-	QString ret = rx.cap(1);
-	return ret.toInt();
+    //QRegExp r06("[Mm][Dd].[Dd][Aa][Tt]");
+    //if(r06.indexIn(str))return 6;
+    if (str.startsWith("alcostg"))
+        return 103;
+    QRegExp rx("^[Tt][Hh](\\d{2,3})");
+    int pos = rx.indexIn(str);
+    if (pos == -1) return -1;
+    QStringList list = rx.capturedTexts();
+    QString ret = rx.cap(1);
+    return ret.toInt();
 }
 
 void MainWindow::setPlayListTableHeader()

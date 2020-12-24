@@ -29,10 +29,19 @@ bool SongList::LoadFile(QBuffer *buf, bool ignoreAnUint)
 bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
 {
 	ssize_t sfmt=datw->getFileSize(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt");
+	bool is_al=false;
+	if (!~sfmt)
+	{
+		sfmt=datw->getFileSize("albgm.fmt");
+		if(~sfmt)is_al=true;
+	}
 	if(!~sfmt)return false;
 	QByteArray *arr=new QByteArray((int)(sfmt+1),'\0');
 	char* dat=arr->data();
-	datw->getFile(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt", dat);
+	if (is_al)
+		datw->getFile("albgm.fmt", dat);
+	else
+		datw->getFile(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt", dat);
 	QBuffer *buf=new QBuffer(arr,nullptr);
 	buf->open(QIODevice::ReadOnly);
 	LoadFile(buf,ignoreAnUint);
