@@ -41,7 +41,7 @@ SOURCES += \
     thtk/thtk/thdat105.c \
     thtk/thtk/thlzss.c \
     thtk/thtk/thrle.c \
-    thtk/thtk/util.c \
+    thtk/thtk/detect.c \
     thdatwrapper.cpp \
     songlist.cpp \
     outputselectiondialog.cpp
