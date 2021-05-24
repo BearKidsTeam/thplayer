@@ -1,0 +1,47 @@
+# This is a basic workflow to help you get started with Actions
+
+name: macOS Package
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: macos-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v2
+
+      - name: Build
+        working-directory: ./
+        run: qmake thplayer.pro && make -j$(nproc)
+
+      - name: Package
+        working-directory: ./
+        run: |
+          macdeployqt thplayer.app
+          zip -r9 --symlinks thplayer-macos.zip thplayer.app
+          
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: macOS-Build
+          path: thplayer-macos.zip
