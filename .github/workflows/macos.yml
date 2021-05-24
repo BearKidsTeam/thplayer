@@ -24,16 +24,18 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Install Qt
         uses: jurplel/install-qt-action@v2
 
       - name: Build
-        working-directory: ./thplayer
-        run: qmake && make -j$(nproc)
+        working-directory: ./
+        run: qmake thplayer.pro && make -j$(nproc)
 
       - name: Package
-        working-directory: ./thplayer
+        working-directory: ./
         run: |
           macdeployqt thplayer.app
           zip -r9 --symlinks thplayer-macos.zip thplayer.app
