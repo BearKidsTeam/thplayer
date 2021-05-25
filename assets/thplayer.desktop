@@ -2,7 +2,7 @@
 [Desktop Entry]
 Type=Application
 Name=TouHou Player
-Exec=/usr/bin/thplayer
+Exec=thplayer
 Icon=thplayer
 Comment=Touhou BGM Player for all platform.
 Categories=Audio;AudioVideo;Qt;
