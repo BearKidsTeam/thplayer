@@ -30,7 +30,7 @@ jobs:
       - name: Install build dept.
         run: |
           sudo apt update
-          sudo apt install qtbase5-dev
+          sudo apt install qtbase5-dev qtmultimedia5-dev
 
       - name: Get linuxdeploy
         run: |
