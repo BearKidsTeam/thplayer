@@ -1,0 +1,54 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Linux Package
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Install build dept.
+        run: |
+          sudo apt update
+          sudo apt install qtbase5-dev
+
+      - name: Get linuxdeploy
+        run: |
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
+          wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
+          chmod +x linuxdeploy-*.AppImage
+
+      - name: Build
+        working-directory: ./
+        run: qmake thplayer.pro && make -j$(nproc)
+
+      - name: Package
+        run: |
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir -e thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
+          mv thplayer*.AppImage thplayer-linux.AppImage
+
+      - name: Upload
+        uses: actions/upload-artifact@v2
+        with:
+          name: Linux-Build
+          path: thplayer-linux.AppImage
