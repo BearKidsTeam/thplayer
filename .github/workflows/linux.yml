@@ -45,7 +45,7 @@ jobs:
       - name: Package
         run: |
           ./linuxdeploy-x86_64.AppImage --appdir AppDir -e thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
-          mv thplayer*.AppImage thplayer-linux.AppImage
+          mv TouHou_Player*.AppImage thplayer-linux.AppImage
 
       - name: Upload
         uses: actions/upload-artifact@v2
