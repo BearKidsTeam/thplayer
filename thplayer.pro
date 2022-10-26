@@ -4,9 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui multimedia
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core widgets gui multimedia
 
 TARGET = thplayer
 TEMPLATE = app
@@ -30,6 +28,7 @@ SOURCES += \
     thtk/thtk/bits.c \
     thtk/thtk/error.c \
     thtk/thtk/io.c \
+    thtk/thtk/match.c \
     thtk/thtk/rng_mt.c \
     thtk/thtk/thcrypt.c \
     thtk/thtk/thcrypt105.c \

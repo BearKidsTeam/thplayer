@@ -16,7 +16,7 @@ The Touhou game versions we support are:
 
 ``` plain
 th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17, th18
-th095, th125, th128, th143, th165
+th095, th125, th128, th143, th165, th185
 ```
 
 Future TouHou releases should also supported as long as ZUN doesn't change the data format.
