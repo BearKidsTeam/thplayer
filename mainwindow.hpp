@@ -11,7 +11,6 @@
 #include <QCommandLineParser>
 #include <thread>
 #include "songlist.hpp"
-#include "boundedbuffer.hpp"
 #include "thdatwrapper.hpp"
 
 namespace Ui

@@ -25,7 +25,6 @@ add_compile_definitions(PATH_VALSIZE=${PATH_VALSIZE})
 
 add_executable(thplayer
     main.cpp
-    boundedbuffer.cpp
     loopedpcmstreamer.cpp
     mainwindow.cpp
     outputselectiondialog.cpp
