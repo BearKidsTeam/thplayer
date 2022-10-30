@@ -4,7 +4,8 @@
 #include <QDialog>
 #include <QAudioDeviceInfo>
 
-namespace Ui {
+namespace Ui
+{
 class OutputSelectionDialog;
 }
 
@@ -15,15 +16,15 @@ class OutputSelectionDialog : public QDialog
 public:
     explicit OutputSelectionDialog(QWidget *parent = 0);
     ~OutputSelectionDialog();
-	void init(int curout);
-	int selection();
+    void init(int curout);
+    int selection();
 
 private slots:
-	void on_buttonBox_accepted();
+    void on_buttonBox_accepted();
 
 private:
     Ui::OutputSelectionDialog *ui;
-	int _selection;
+    int _selection;
 };
 
 #endif // OUTPUTSELECTIONDIALOG_H

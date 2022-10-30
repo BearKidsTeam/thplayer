@@ -20,47 +20,54 @@
 #endif
 
 MainWindow::MainWindow(QWidget *parent) :
-	QMainWindow(parent),
-	ui(new Ui::MainWindow)
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
 {
-	ui->setupUi(this);
-	setPlayListTableHeader();
-	ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
-	ui->playlistTable->setSortingEnabled(false);
-	datw=nullptr;
-	devi=-1;
-	timer=new QTimer();
-	timer->setInterval(100);
-	connect(timer,&QTimer::timeout,this,&MainWindow::updateWidgets);
-	connect(ui->progressslider,&QSlider::sliderReleased,this,&MainWindow::seek);
-	timer->start();
+    ui->setupUi(this);
+    setPlayListTableHeader();
+    ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
+    ui->playlistTable->setSortingEnabled(false);
+    datw = nullptr;
+    devi = -1;
+    timer = new QTimer();
+    timer->setInterval(100);
+    connect(timer, &QTimer::timeout, this, &MainWindow::updateWidgets);
+    connect(ui->progressslider, &QSlider::sliderReleased, this, &MainWindow::seek);
+    timer->start();
 }
-bool MainWindow::args(QCommandLineParser& p)
+bool MainWindow::args(QCommandLineParser &p)
 {
-	argp=&p;
-	if(argp->isSet("list-devices"))
-	{
-		printf("List of available output devices:\n");
-		printf("Device ID\tDevice Name\n");
-		int id=0;
-		for(auto& di:QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
-		{
-			printf("%d        \t%s\n",id++,di.deviceName().toStdString().c_str());
-		}
-		return true;
-	}
-	if(argp->isSet("device"))
-	{
-		bool ok=false;
-		int t=argp->value("device").toInt(&ok);
-		if(!ok){printf("--device: Number expected.\n");return true;}
-		if(t>=QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).size()||t<0)
-		{printf("--device: device ID out of range.\n");return true;}
-		devi=t;
-	}
-	if(argp->positionalArguments().size())
-		this->LoadFile(argp->positionalArguments()[0]);
-	return false;
+    argp = &p;
+    if (argp->isSet("list-devices"))
+    {
+        printf("List of available output devices:\n");
+        printf("Device ID\tDevice Name\n");
+        int id = 0;
+        for (auto &di : QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
+        {
+            printf("%d        \t%s\n", id++, di.deviceName().toStdString().c_str());
+        }
+        return true;
+    }
+    if (argp->isSet("device"))
+    {
+        bool ok = false;
+        int t = argp->value("device").toInt(&ok);
+        if (!ok)
+        {
+            printf("--device: Number expected.\n");
+            return true;
+        }
+        if (t >= QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).size() || t < 0)
+        {
+            printf("--device: device ID out of range.\n");
+            return true;
+        }
+        devi = t;
+    }
+    if (argp->positionalArguments().size())
+        this->LoadFile(argp->positionalArguments()[0]);
+    return false;
 }
 
 /*!    \brief  Load file.
@@ -71,62 +78,74 @@ bool MainWindow::args(QCommandLineParser& p)
  */
 bool MainWindow::LoadFile(QString filepath)
 {
-	QUrl url(filepath), bgmurl;
-	bool isTrial = false;
-	if(QFileInfo(filepath).isFile()) {
-		url=url.adjusted(QUrl::RemoveFilename);
-	}
+    QUrl url(filepath), bgmurl;
+    bool isTrial = false;
+    if (QFileInfo(filepath).isFile())
+    {
+        url = url.adjusted(QUrl::RemoveFilename);
+    }
 
-	if (QFile::exists(url.url()+"/thbgm.dat")) {
-		bgmurl = QUrl(url.url()+"/thbgm.dat");
-	} else if (QFile::exists(url.url()+"/thbgm_tr.dat")) {
-		isTrial = true;
-		bgmurl = QUrl(url.url()+"/thbgm_tr.dat");
-	} else if (QFile::exists(url.url()+"/albgm.dat")) {
-		bgmurl = QUrl(url.url()+"/albgm.dat");
-	} else {
-		return false;
-	}
+    if (QFile::exists(url.url() + "/thbgm.dat"))
+    {
+        bgmurl = QUrl(url.url() + "/thbgm.dat");
+    }
+    else if (QFile::exists(url.url() + "/thbgm_tr.dat"))
+    {
+        isTrial = true;
+        bgmurl = QUrl(url.url() + "/thbgm_tr.dat");
+    }
+    else if (QFile::exists(url.url() + "/albgm.dat"))
+    {
+        bgmurl = QUrl(url.url() + "/albgm.dat");
+    }
+    else
+    {
+        return false;
+    }
 
-	if(!QFileInfo(bgmurl.url()).isFile()) {
-		return false;
-	}
+    if (!QFileInfo(bgmurl.url()).isFile())
+    {
+        return false;
+    }
 
-	songs.thbgmFilePath = bgmurl.url();
-	songs.isTrial = isTrial;
+    songs.thbgmFilePath = bgmurl.url();
+    songs.isTrial = isTrial;
 
-	QDir gamedir=QDir(url.url());
-	QStringList sl;
-	sl<<"*.dat";
-	QFileInfoList fil=gamedir.entryInfoList(sl,QDir::NoFilter,QDir::Name);
-	QString datf="";
-	int ver=-1;
-	for(auto&i:fil)
-	{
-		if(~(ver=thVersionDetect(i.fileName())))
-		{datf=i.absoluteFilePath();break;}
-	}
-	if(!datf.length())return false;
+    QDir gamedir = QDir(url.url());
+    QStringList sl;
+    sl << "*.dat";
+    QFileInfoList fil = gamedir.entryInfoList(sl, QDir::NoFilter, QDir::Name);
+    QString datf = "";
+    int ver = -1;
+    for (auto &i : fil)
+    {
+        if (~(ver = thVersionDetect(i.fileName())))
+        {
+            datf = i.absoluteFilePath();
+            break;
+        }
+    }
+    if (!datf.length())return false;
 #ifdef _WIN32
-	std::wstring ws=datf.toStdWString();
-	const wchar_t* s=ws.c_str();
-	int size=WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,0,0,0,0);
-	char* c=(char*)calloc(size,sizeof(char));
-	WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,c,size,0,0);
+    std::wstring ws = datf.toStdWString();
+    const wchar_t *s = ws.c_str();
+    int size = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, s, -1, 0, 0, 0, 0);
+    char *c = (char *)calloc(size, sizeof(char));
+    WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, s, -1, c, size, 0, 0);
     //TODO
 #else
-	char* c=(char*)calloc(datf.toStdString().length()+1,sizeof(char));
-	strncpy(c,datf.toStdString().c_str(),datf.toStdString().length()+1);
+    char *c = (char *)calloc(datf.toStdString().length() + 1, sizeof(char));
+    strncpy(c, datf.toStdString().c_str(), datf.toStdString().length() + 1);
 #endif
-	stop();
-	if(datw)delete datw;
-	datw=new thDatWrapper(c,ver);
-	if(ver>50)ver/=10;//95,125,128,143 etc
-	songs.LoadFile(datw,ver<13?true:false);
-	free(c);
-	ui->thnameLabel->setText(url.url());
-	SetupSongList();
-	return true;
+    stop();
+    if (datw) delete datw;
+    datw = new thDatWrapper(c, ver);
+    if (ver > 50) ver /= 10; //95,125,128,143 etc
+    songs.LoadFile(datw, ver < 13 ? true : false);
+    free(c);
+    ui->thnameLabel->setText(url.url());
+    SetupSongList();
+    return true;
 }
 
 /*!    \brief  Load song data from thbgm.songs file.
@@ -136,70 +155,72 @@ bool MainWindow::LoadFile(QString filepath)
  */
 bool MainWindow::SetupSongList()
 {
-	ui->playlistTable->clear();
-	setPlayListTableHeader();
-	ui->playlistTable->setRowCount(songs.songCnt);
-	ui->playlistTable->setSortingEnabled(false);
-	for (int i = 0; i < songs.songCnt; i++) {
-		song_t* song = &songs.songs[i];
-		QString fileName(song->filename);
+    ui->playlistTable->clear();
+    setPlayListTableHeader();
+    ui->playlistTable->setRowCount(songs.songCnt);
+    ui->playlistTable->setSortingEnabled(false);
+    for (int i = 0; i < songs.songCnt; i++)
+    {
+        song_t *song = &songs.songs[i];
+        QString fileName(song->filename);
 
-		QTableWidgetItem *itemTitle = new QTableWidgetItem(song->title);
-		QTableWidgetItem *itemName = new QTableWidgetItem(fileName);
-		QTableWidgetItem *itemStart = new QTableWidgetItem("0x"+QString::number(song->start,16));
-		QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x"+QString::number(song->loopStart,16));
-		QTableWidgetItem *itemLen = new QTableWidgetItem("0x"+QString::number(song->length,16));
-		QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(song->rate));
-		ui->playlistTable->setItem(i, 0, itemTitle);
-		ui->playlistTable->setItem(i, 1, itemName);
-		ui->playlistTable->setItem(i, 2, itemStart);
-		ui->playlistTable->setItem(i, 3, itemLpSt);
-		ui->playlistTable->setItem(i, 4, itemLen);
-		ui->playlistTable->setItem(i, 5, itemRate);
-	}
-	//ui->playlistTable->setSortingEnabled(true);
-	return true;
+        QTableWidgetItem *itemTitle = new QTableWidgetItem(song->title);
+        QTableWidgetItem *itemName = new QTableWidgetItem(fileName);
+        QTableWidgetItem *itemStart = new QTableWidgetItem("0x" + QString::number(song->start, 16));
+        QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x" + QString::number(song->loopStart, 16));
+        QTableWidgetItem *itemLen = new QTableWidgetItem("0x" + QString::number(song->length, 16));
+        QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(song->rate));
+        ui->playlistTable->setItem(i, 0, itemTitle);
+        ui->playlistTable->setItem(i, 1, itemName);
+        ui->playlistTable->setItem(i, 2, itemStart);
+        ui->playlistTable->setItem(i, 3, itemLpSt);
+        ui->playlistTable->setItem(i, 4, itemLen);
+        ui->playlistTable->setItem(i, 5, itemRate);
+    }
+    //ui->playlistTable->setSortingEnabled(true);
+    return true;
 }
 
 MainWindow::~MainWindow()
 {
-	stop();
-	delete ui;
-	if(datw)delete datw;
+    stop();
+    delete ui;
+    if (datw)delete datw;
 }
 
 void MainWindow::stop()
 {
-	if (audioOutput) {
-		audioOutput->stop();
-		delete audioOutput;
-		audioOutput = nullptr;
+    if (audioOutput)
+    {
+        audioOutput->stop();
+        delete audioOutput;
+        audioOutput = nullptr;
         st->close();
         delete st;
         st = nullptr;
-	}
+    }
 }
 
 // drag n drop
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)
 {
-	//check droped file
-		event->acceptProposedAction();
+    //check droped file
+    event->acceptProposedAction();
 }
 
-void MainWindow::dropEvent(QDropEvent* event)
+void MainWindow::dropEvent(QDropEvent *event)
 {
-	QList<QUrl> urls = event->mimeData()->urls();
-	if(urls.isEmpty()) return;
-	QString fileName = urls.first().toLocalFile();
-	LoadFile(fileName);
+    QList<QUrl> urls = event->mimeData()->urls();
+    if (urls.isEmpty()) return;
+    QString fileName = urls.first().toLocalFile();
+    LoadFile(fileName);
 }
 
 void MainWindow::updateWidgets()
 {
-	if(!st)return;
-	if(!cursong.length)return;
-	ui->progressslider->setValue((int)100.*st->pos_sample()/(cursong.length / 4)); //TODO: don't hardcode the 4 here
+    if (!st) return;
+    if (!cursong.length) return;
+    ui->progressslider->setValue((int)100.*st->pos_sample() / (cursong.length / 4)); //TODO: don't hardcode the 4 here
 }
 void MainWindow::seek()
 {
@@ -208,19 +229,19 @@ void MainWindow::seek()
 
 void MainWindow::on_playButton_clicked()
 {
-	LoadFile(QFileDialog::getExistingDirectory(this,"Select game directory"));
+    LoadFile(QFileDialog::getExistingDirectory(this, "Select game directory"));
 }
 
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 {
-	QAudioFormat audioFormat;
-	audioFormat.setCodec("audio/pcm");
-	audioFormat.setChannelCount(2);
-	audioFormat.setSampleRate(rate);
-	audioFormat.setSampleSize(16);
-	audioFormat.setSampleType(QAudioFormat::SignedInt);
-	audioFormat.setByteOrder(QAudioFormat::LittleEndian);
-	return audioFormat;
+    QAudioFormat audioFormat;
+    audioFormat.setCodec("audio/pcm");
+    audioFormat.setChannelCount(2);
+    audioFormat.setSampleRate(rate);
+    audioFormat.setSampleSize(16);
+    audioFormat.setSampleType(QAudioFormat::SignedInt);
+    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    return audioFormat;
 }
 
 int MainWindow::thVersionDetect(QString str)
@@ -239,79 +260,82 @@ int MainWindow::thVersionDetect(QString str)
 
 void MainWindow::setPlayListTableHeader()
 {
-	ui->playlistTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Title"));
-	ui->playlistTable->setHorizontalHeaderItem(1, new QTableWidgetItem("File"));
-	ui->playlistTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Start"));
-	ui->playlistTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Loop"));
-	ui->playlistTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Length"));
-	ui->playlistTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Rate"));
+    ui->playlistTable->setHorizontalHeaderItem(0, new QTableWidgetItem("Title"));
+    ui->playlistTable->setHorizontalHeaderItem(1, new QTableWidgetItem("File"));
+    ui->playlistTable->setHorizontalHeaderItem(2, new QTableWidgetItem("Start"));
+    ui->playlistTable->setHorizontalHeaderItem(3, new QTableWidgetItem("Loop"));
+    ui->playlistTable->setHorizontalHeaderItem(4, new QTableWidgetItem("Length"));
+    ui->playlistTable->setHorizontalHeaderItem(5, new QTableWidgetItem("Rate"));
 }
 
 void MainWindow::play(int index)
 {
-	int songIdx = -1;
-	if (index != -1) songIdx = index;
-	if (songIdx < 0 || songIdx >= songs.songCnt) return;
+    int songIdx = -1;
+    if (index != -1) songIdx = index;
+    if (songIdx < 0 || songIdx >= songs.songCnt) return;
 
-	ui->songnameLabel->setText(songs.songs[songIdx].title.length()?songs.songs[songIdx].title:songs.songs[songIdx].filename);
-	ui->commentTB->setText(songs.songs[songIdx].comment);
-	cursong=songs.songs[songIdx];
+    ui->songnameLabel->setText(songs.songs[songIdx].title.length() ? songs.songs[songIdx].title : songs.songs[songIdx].filename);
+    ui->commentTB->setText(songs.songs[songIdx].comment);
+    cursong = songs.songs[songIdx];
 
-	// audio playback:
-	QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
+    // audio playback:
+    QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
 
-	QAudioDeviceInfo info1(
-		~devi?QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)[devi]
-		:QAudioDeviceInfo::defaultOutputDevice());
-	if (!info1.isFormatSupported(desiredFormat1)) {
-		qWarning() << "Default format not supported, trying to use the nearest.";
-		desiredFormat1 = info1.preferredFormat();
-	}
-	stop();
-	audioOutput = new QAudioOutput(info1,desiredFormat1, this);
-	audioOutput->setVolume(1.0);
+    QAudioDeviceInfo info1(
+        ~devi ? QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)[devi]
+        : QAudioDeviceInfo::defaultOutputDevice());
+    if (!info1.isFormatSupported(desiredFormat1))
+    {
+        qWarning() << "Default format not supported, trying to use the nearest.";
+        desiredFormat1 = info1.preferredFormat();
+    }
+    stop();
+    audioOutput = new QAudioOutput(info1, desiredFormat1, this);
+    audioOutput->setVolume(1.0);
     st = new LoopedPCMStreamer(std::filesystem::path(songs.thbgmFilePath.toStdString()),
-                               songs.songs[songIdx].start,
-                               songs.songs[songIdx].length,
-                               songs.songs[songIdx].loopStart);
+        songs.songs[songIdx].start,
+        songs.songs[songIdx].length,
+        songs.songs[songIdx].loopStart);
     st->open(QIODevice::OpenModeFlag::ReadOnly);
 
-	audioOutput->start(st);
-	if(audioOutput->error())
-	{
-		OutputSelectionDialog d;
-		d.init(devi);d.exec();
-		devi=d.selection();play(index);
-	}
+    audioOutput->start(st);
+    if (audioOutput->error())
+    {
+        OutputSelectionDialog d;
+        d.init(devi);
+        d.exec();
+        devi = d.selection();
+        play(index);
+    }
 }
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 {
-	play(index.row());
+    play(index.row());
 }
 
 void MainWindow::on_loopButton_clicked()
 {
-	// TODO: ???
-	// ui->loopButton->setText(loopEnabled ? tr("Loop: On") : tr("Loop: Off"));
+    // TODO: ???
+    // ui->loopButton->setText(loopEnabled ? tr("Loop: On") : tr("Loop: Off"));
 }
 
 void MainWindow::on_prevButton_clicked()
 {
-	int r=ui->playlistTable->currentRow();
-	int c=ui->playlistTable->currentColumn();
-	int rc=ui->playlistTable->rowCount();
-	r=(r+rc-1)%rc;
-	ui->playlistTable->setCurrentCell(r,c);
-	play(r);
+    int r = ui->playlistTable->currentRow();
+    int c = ui->playlistTable->currentColumn();
+    int rc = ui->playlistTable->rowCount();
+    r = (r + rc - 1) % rc;
+    ui->playlistTable->setCurrentCell(r, c);
+    play(r);
 }
 
 void MainWindow::on_nextButton_clicked()
 {
-	int r=ui->playlistTable->currentRow();
-	int c=ui->playlistTable->currentColumn();
-	int rc=ui->playlistTable->rowCount();
-	r=(r+1)%rc;
-	ui->playlistTable->setCurrentCell(r,c);
-	play(r);
+    int r = ui->playlistTable->currentRow();
+    int c = ui->playlistTable->currentColumn();
+    int rc = ui->playlistTable->rowCount();
+    r = (r + 1) % rc;
+    ui->playlistTable->setCurrentCell(r, c);
+    play(r);
 }

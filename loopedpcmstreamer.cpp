@@ -42,8 +42,8 @@ bool LoopedPCMStreamer::open(QIODevice::OpenMode mode)
     const uint64_t blength = 1ULL * nsamples * BPCS;
     mapped_length = blength + mapped_offset;
 
-    mapped = mmap(mapped, mapped_length , PROT_READ, MAP_PRIVATE, fd, offset_aligned);
-    if (mapped == (void*) -1)
+    mapped = mmap(mapped, mapped_length, PROT_READ, MAP_PRIVATE, fd, offset_aligned);
+    if (mapped == (void *) -1)
     {
         mapped = nullptr;
         close();
@@ -51,7 +51,7 @@ bool LoopedPCMStreamer::open(QIODevice::OpenMode mode)
     }
 
     position = 0;
-    
+
     return true;
 }
 
@@ -104,15 +104,15 @@ qint64 LoopedPCMStreamer::readData(char *data, qint64 maxSize)
     uint64_t bytesread = samplesread * BPCS;
     if (position + samplesread < nsamples)
     {
-        memcpy(data, (char*)mapped + position * BPCS + mapped_offset, bytesread);
+        memcpy(data, (char *)mapped + position * BPCS + mapped_offset, bytesread);
         position += samplesread;
     }
     else
     {
         uint64_t samplesremaining = nsamples - position;
         uint64_t sampleswarpped = samplesread - samplesremaining;
-        memcpy(data, (char*)mapped + position * BPCS + mapped_offset, samplesremaining * BPCS);
-        memcpy(data + samplesremaining * BPCS, (char*) mapped + mapped_offset + loopsample * BPCS, sampleswarpped * BPCS);
+        memcpy(data, (char *)mapped + position * BPCS + mapped_offset, samplesremaining * BPCS);
+        memcpy(data + samplesremaining * BPCS, (char *) mapped + mapped_offset + loopsample * BPCS, sampleswarpped * BPCS);
         position = loopsample + sampleswarpped;
     }
     return bytesread;
