@@ -1,7 +1,7 @@
 #ifndef THDATWRAPPER_H
 #define THDATWRAPPER_H
 
-#include <thtk-config/config.h>
+#include <thtk/thdat.h>
 #include <thtk/io.h>
 #include <thtk/dat.h>
 
