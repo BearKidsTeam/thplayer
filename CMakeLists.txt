@@ -15,9 +15,18 @@ set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
+INCLUDE (CheckTypeSize)
+
+SET(CMAKE_EXTRA_INCLUDE_FILES "filesystem")
+check_type_size("std::filesystem::path::value_type" PATH_VALSIZE LANGUAGE CXX)
+SET(CMAKE_EXTRA_INCLUDE_FILES)
+
+add_compile_definitions(PATH_VALSIZE=${PATH_VALSIZE})
+
 add_executable(thplayer
     main.cpp
     boundedbuffer.cpp
+    loopedpcmstreamer.cpp
     mainwindow.cpp
     outputselectiondialog.cpp
     songlist.cpp

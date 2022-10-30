@@ -36,6 +36,8 @@ class QClickableSlider:public QSlider
 		}
 };
 
+class LoopedPCMStreamer;
+
 class MainWindow : public QMainWindow
 {
 	Q_OBJECT
@@ -51,12 +53,9 @@ private:
 	unsigned loopStart;
 	Ui::MainWindow *ui;
 	SongList songs;
-	FILE* bgmdat=nullptr;
-	std::thread *streamerThread;
-	bool stopStreamer;
 	song_t cursong;
+    LoopedPCMStreamer *st = nullptr;
 	QAudioOutput* audioOutput=nullptr;
-	BoundedBuffer *audioBuffer=nullptr;
 	QAudioFormat getAudioFormat(unsigned rate);
 	QTimer *timer;
 	thDatWrapper *datw;
@@ -66,7 +65,6 @@ private:
 	void setPlayListTableHeader();
 	void play(int index = -1);
 	void stop();
-	void audioStreamer();
 
 private slots:
 	// drag n drop

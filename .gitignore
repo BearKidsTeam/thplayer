@@ -15,3 +15,6 @@ debian/tmp/
 
 # sh*tOS
 .DS_Store
+
+#vim
+*.swp

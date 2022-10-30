@@ -2,6 +2,7 @@
 #include "ui_mainwindow.h"
 #include <cstdio>
 #include <cstring>
+#include <filesystem>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
@@ -9,7 +10,10 @@
 #include <QTableWidgetItem>
 #include <QMessageBox>
 #include <QMimeData>
+
 #include "outputselectiondialog.hpp"
+#include "loopedpcmstreamer.hpp"
+
 #ifdef _WIN32
 #define NOMINMAX //Windows API breaks STL, shit.
 #include <Windows.h>
@@ -24,7 +28,6 @@ MainWindow::MainWindow(QWidget *parent) :
 	ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 	ui->playlistTable->setSortingEnabled(false);
 	datw=nullptr;
-	streamerThread = nullptr;
 	devi=-1;
 	timer=new QTimer();
 	timer->setInterval(100);
@@ -110,11 +113,10 @@ bool MainWindow::LoadFile(QString filepath)
 	int size=WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,0,0,0,0);
 	char* c=(char*)calloc(size,sizeof(char));
 	WideCharToMultiByte(CP_OEMCP,WC_NO_BEST_FIT_CHARS,s,-1,c,size,0,0);
-	bgmdat=_wfopen(songs.thbgmFilePath.toStdWString().c_str(),L"rb");
+    //TODO
 #else
 	char* c=(char*)calloc(datf.toStdString().length()+1,sizeof(char));
 	strncpy(c,datf.toStdString().c_str(),datf.toStdString().length()+1);
-	bgmdat=fopen(songs.thbgmFilePath.toStdString().c_str(),"rb");
 #endif
 	stop();
 	if(datw)delete datw;
@@ -163,25 +165,18 @@ MainWindow::~MainWindow()
 {
 	stop();
 	delete ui;
-	if(bgmdat)fclose(bgmdat);
 	if(datw)delete datw;
 }
 
 void MainWindow::stop()
 {
-	stopStreamer = true;
-	if(audioBuffer)audioBuffer->close();
-	if(streamerThread){
-		streamerThread->join();
-		delete streamerThread;
-		streamerThread = nullptr;
-	}
 	if (audioOutput) {
 		audioOutput->stop();
 		delete audioOutput;
-		delete audioBuffer;
 		audioOutput = nullptr;
-		audioBuffer = nullptr;
+        st->close();
+        delete st;
+        st = nullptr;
 	}
 }
 
@@ -202,21 +197,13 @@ void MainWindow::dropEvent(QDropEvent* event)
 
 void MainWindow::updateWidgets()
 {
-	if(!bgmdat)return;
+	if(!st)return;
 	if(!cursong.length)return;
-	if(!audioBuffer)return;
-	long pos=ftell(bgmdat)-(long)audioBuffer->size();
-	if(pos<0)pos+=(-1*pos/(cursong.length-cursong.loopStart)+1)*(cursong.length-cursong.loopStart);
-	long spos=pos-cursong.start;
-	ui->progressslider->setValue((int)100.*spos/cursong.length);
+	ui->progressslider->setValue((int)100.*st->pos_sample()/(cursong.length / 4)); //TODO: don't hardcode the 4 here
 }
 void MainWindow::seek()
 {
-	if(!bgmdat)return;
-	long spos=(long)(ui->progressslider->value()/100.*cursong.length);
-	if(spos%4)spos-=spos%4;
-	fseek(bgmdat,spos+cursong.start,SEEK_SET);
-	audioBuffer->clear();
+    st->seek_sample(ui->progressslider->value() / 100. * (cursong.length / 4.)); //TODO: don't hardcode the 4 here
 }
 
 void MainWindow::on_playButton_clicked()
@@ -283,12 +270,13 @@ void MainWindow::play(int index)
 	stop();
 	audioOutput = new QAudioOutput(info1,desiredFormat1, this);
 	audioOutput->setVolume(1.0);
-	audioBuffer=new BoundedBuffer(32768);
-	audioBuffer->open(QIODevice::ReadWrite);
+    st = new LoopedPCMStreamer(std::filesystem::path(songs.thbgmFilePath.toStdString()),
+                               songs.songs[songIdx].start,
+                               songs.songs[songIdx].length,
+                               songs.songs[songIdx].loopStart);
+    st->open(QIODevice::OpenModeFlag::ReadOnly);
 
-	stopStreamer=false;
-	streamerThread = new std::thread(&MainWindow::audioStreamer,this);
-	audioOutput->start(audioBuffer);
+	audioOutput->start(st);
 	if(audioOutput->error())
 	{
 		OutputSelectionDialog d;
@@ -300,24 +288,6 @@ void MainWindow::play(int index)
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 {
 	play(index.row());
-}
-
-void MainWindow::audioStreamer()
-{
-	static const size_t buf_size=2048;
-	char* buf=new char[buf_size];
-	fseek(bgmdat,cursong.start,SEEK_SET);
-	while(!stopStreamer)
-	{
-		long curpos=ftell(bgmdat);
-		long songpos=curpos-cursong.start;
-		size_t byte_expected=std::min((long)buf_size,(long)cursong.length-songpos);
-		size_t sz=fread(buf,1,byte_expected,bgmdat);
-		audioBuffer->write(buf,sz);
-		if((unsigned)ftell(bgmdat)>=cursong.start+cursong.length)//also increment loop counter here
-		fseek(bgmdat,cursong.start+cursong.loopStart,SEEK_SET);
-	}
-	delete[] buf;
 }
 
 void MainWindow::on_loopButton_clicked()
