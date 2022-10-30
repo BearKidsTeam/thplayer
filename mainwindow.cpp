@@ -31,8 +31,8 @@ MainWindow::MainWindow(QWidget *parent) :
 	devi=-1;
 	timer=new QTimer();
 	timer->setInterval(100);
-	connect(timer,SIGNAL(timeout()),this,SLOT(updateWidgets()));
-	connect(ui->progressslider,SIGNAL(sliderReleased()),this,SLOT(seek()));
+	connect(timer,&QTimer::timeout,this,&MainWindow::updateWidgets);
+	connect(ui->progressslider,&QSlider::sliderReleased,this,&MainWindow::seek);
 	timer->start();
 }
 bool MainWindow::args(QCommandLineParser& p)

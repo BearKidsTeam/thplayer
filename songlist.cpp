@@ -64,6 +64,7 @@ void SongList::LoadComment(thDatWrapper *datw)
 	std::pair<QString,QString>* pcur=nullptr;
 	for(auto&i:sl)
 	{
+        if (!i.length()) continue;
 		if(i[0]=='@')
 		{
 			QString fn=i.mid(i.indexOf('/')+1);
