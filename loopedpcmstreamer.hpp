@@ -1,9 +1,9 @@
 #ifndef LOOPEDPCMSTREAMER_HPP
 #define LOOPEDPCMSTREAMER_HPP
 
-#include <filesystem>
-
 #include <QIODevice>
+// https://bugreports.qt.io/browse/QTBUG-73263
+#include <filesystem>
 
 namespace fs = std::filesystem;
 

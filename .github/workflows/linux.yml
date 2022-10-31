@@ -18,19 +18,22 @@ jobs:
   # This workflow contains a single job called "build"
   build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install build dept.
         run: |
           sudo apt update
           sudo apt install qtbase5-dev qtmultimedia5-dev libqt5multimedia5-plugins
+          # for linuxdeploy: https://github.com/AppImage/AppImageKit/wiki/FUSE
+          sudo add-apt-repository universe
+          sudo apt install libfuse2
 
       - name: Get linuxdeploy
         run: |
@@ -40,15 +43,19 @@ jobs:
 
       - name: Build
         working-directory: ./
-        run: qmake thplayer.pro && make -j$(nproc)
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build . -j$(nproc)
+          cd ..
 
       - name: Package
         run: |
-          ./linuxdeploy-x86_64.AppImage --appdir AppDir -e thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
+          ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
           mv TouHou_Player*.AppImage thplayer-linux.AppImage
 
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Linux-Build
           path: thplayer-linux.AppImage

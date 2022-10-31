@@ -23,25 +23,32 @@ jobs:
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
-          submodules: true
+          submodules: recursive
 
       - name: Install Qt
-        uses: jurplel/install-qt-action@v2
+        uses: jurplel/install-qt-action@v3
 
       - name: Build
         working-directory: ./
-        run: qmake thplayer.pro && make -j$(nproc)
+        run: |
+          mkdir build && cd build
+          cmake ..
+          cmake --build . -j$(nproc)
+          cd ..
 
       - name: Package
+        id: package
         working-directory: ./
+        continue-on-error: true
         run: |
-          macdeployqt thplayer.app
+          macdeployqt build/thplayer.app
           zip -r9 --symlinks thplayer-macos.zip thplayer.app
           
       - name: Upload
-        uses: actions/upload-artifact@v2
+        if: steps.package.conclusion == 'success'
+        uses: actions/upload-artifact@v3
         with:
           name: macOS-Build
           path: thplayer-macos.zip
