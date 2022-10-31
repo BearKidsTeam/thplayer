@@ -21,6 +21,24 @@
 #include <Windows.h>
 #endif
 
+QString fsstr_to_qstring(const fs::path::string_type &s)
+{
+#if PATH_VALSIZE == 2 //the degenerate platform
+    return QString::fromStdWString(s);
+#else
+    return QString::fromStdString(s);
+#endif
+}
+
+fs::path qstring_to_path(const QString &s)
+{
+#if PATH_VALSIZE == 2 //the degenerate platform
+    return fs::path(s.toStdWString());
+#else
+    return fs::path(s.toStdString());
+#endif
+}
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
@@ -119,20 +137,9 @@ bool MainWindow::LoadFile(QString filepath)
         }
     }
     if (!datf.length())return false;
-#ifdef _WIN32
-    std::wstring ws = datf.toStdWString();
-    const wchar_t *s = ws.c_str();
-    int size = WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, s, -1, 0, 0, 0, 0);
-    char *c = (char *)calloc(size, sizeof(char));
-    WideCharToMultiByte(CP_OEMCP, WC_NO_BEST_FIT_CHARS, s, -1, c, size, 0, 0);
-    //TODO
-#else
-    char *c = (char *)calloc(datf.toStdString().length() + 1, sizeof(char));
-    strncpy(c, datf.toStdString().c_str(), datf.toStdString().length() + 1);
-#endif
     stop();
     if (datw) delete datw;
-    datw = new thDatWrapper(c, ver);
+    datw = new thDatWrapper(qstring_to_path(datf), ver);
     if (ver > 50) ver /= 10; //95,125,128,143 etc
     thver = ver;
     if (ver == 6)
@@ -142,7 +149,6 @@ bool MainWindow::LoadFile(QString filepath)
     }
     else
         songs.LoadFile(datw, ver < 13 ? true : false);
-    free(c);
     ui->thnameLabel->setText(url.url());
     SetupSongList();
     return true;

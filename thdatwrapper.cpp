@@ -2,10 +2,14 @@
 #include <cstdlib>
 #include <cstring>
 
-thDatWrapper::thDatWrapper(const char *datpath, unsigned ver)
+thDatWrapper::thDatWrapper(const fs::path &datpath, unsigned ver)
 {
     thtk_error_t *e = NULL;
-    datf = thtk_io_open_file(datpath, "rb", &e);
+#if PATH_VALSIZE == 2
+    datf = thtk_io_open_file_w(datpath.c_str(), L"rb", &e);
+#else
+    datf = thtk_io_open_file(datpath.c_str(), "rb", &e);
+#endif
     thtk_error_free(&e);
     dat = thdat_open(ver, datf, &e);
     if (!dat)
