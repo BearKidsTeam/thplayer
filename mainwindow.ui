@@ -93,7 +93,7 @@
        <property name="sizePolicy">
         <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
          <horstretch>0</horstretch>
-         <verstretch>0</verstretch>
+         <verstretch>1</verstretch>
         </sizepolicy>
        </property>
        <property name="sizeAdjustPolicy">
@@ -101,6 +101,9 @@
        </property>
        <property name="editTriggers">
         <set>QAbstractItemView::NoEditTriggers</set>
+       </property>
+       <property name="alternatingRowColors">
+        <bool>true</bool>
        </property>
        <property name="selectionBehavior">
         <enum>QAbstractItemView::SelectRows</enum>
@@ -111,11 +114,11 @@
        <attribute name="horizontalHeaderCascadingSectionResizes">
         <bool>false</bool>
        </attribute>
-       <attribute name="horizontalHeaderDefaultSectionSize">
-        <number>90</number>
-       </attribute>
        <attribute name="horizontalHeaderMinimumSectionSize">
         <number>21</number>
+       </attribute>
+       <attribute name="horizontalHeaderDefaultSectionSize">
+        <number>90</number>
        </attribute>
        <attribute name="horizontalHeaderStretchLastSection">
         <bool>false</bool>
@@ -131,6 +134,12 @@
        <column/>
       </widget>
       <widget class="QTextBrowser" name="commentTB">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
        <property name="acceptDrops">
         <bool>false</bool>
        </property>
@@ -145,7 +154,7 @@
      <x>0</x>
      <y>0</y>
      <width>686</width>
-     <height>17</height>
+     <height>31</height>
     </rect>
    </property>
   </widget>

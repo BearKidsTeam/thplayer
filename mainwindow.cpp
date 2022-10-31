@@ -11,6 +11,7 @@
 #include <QMessageBox>
 #include <QMimeData>
 #include <QRegularExpression>
+#include <QFontDatabase>
 
 #include "outputselectiondialog.hpp"
 #include "loopedpcmstreamer.hpp"
@@ -158,6 +159,7 @@ bool MainWindow::SetupSongList()
     setPlayListTableHeader();
     ui->playlistTable->setRowCount(songs.songCnt);
     ui->playlistTable->setSortingEnabled(false);
+    QFont fnt = QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont);
     for (int i = 0; i < songs.songCnt; i++)
     {
         song_t *song = &songs.songs[i];
@@ -175,6 +177,8 @@ bool MainWindow::SetupSongList()
         ui->playlistTable->setItem(i, 3, itemLpSt);
         ui->playlistTable->setItem(i, 4, itemLen);
         ui->playlistTable->setItem(i, 5, itemRate);
+        for (int j = 1; j < 6; ++j)
+            ui->playlistTable->item(i, j)->setData(Qt::ItemDataRole::FontRole, fnt);
     }
     //ui->playlistTable->setSortingEnabled(true);
     return true;
