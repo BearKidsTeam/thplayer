@@ -262,7 +262,7 @@ int MainWindow::thVersionDetect(QFileInfo i)
     auto mch = re06.match(str);
     if (mch.hasMatch())
     {
-        thDatWrapper mdw(i.filePath().toStdString().c_str(), 6);
+        thDatWrapper mdw(qstring_to_path(i.filePath()), 6);
         if (~mdw.getFileSize("musiccmt.txt")) return 6;
         return -1;
     }
@@ -309,7 +309,7 @@ void MainWindow::play(int index)
     stop();
     audioOutput = new QAudioOutput(info1, desiredFormat1, this);
     audioOutput->setVolume(1.0);
-    fs::path srcfile = fs::path(songs.thbgmFilePath.toStdString());
+    fs::path srcfile = qstring_to_path(songs.thbgmFilePath);
     if (thver == 6)
         srcfile /= fs::path("bgm") / songs.songs[songIdx].filename.toStdString();
     st = new LoopedPCMStreamer(srcfile,

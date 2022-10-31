@@ -33,6 +33,9 @@ protected:
 private:
     void *mapped;
     intptr_t fd;
+#ifdef _WIN32
+    intptr_t maph;
+#endif
     fs::path srcpath;
     uint64_t mapped_offset;
     uint64_t mapped_length;
