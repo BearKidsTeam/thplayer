@@ -10,6 +10,7 @@
 #include <QTableWidgetItem>
 #include <QMessageBox>
 #include <QMimeData>
+#include <QRegularExpression>
 
 #include "outputselectiondialog.hpp"
 #include "loopedpcmstreamer.hpp"
@@ -98,15 +99,6 @@ bool MainWindow::LoadFile(QString filepath)
     {
         bgmurl = QUrl(url.url() + "/albgm.dat");
     }
-    else
-    {
-        return false;
-    }
-
-    if (!QFileInfo(bgmurl.url()).isFile())
-    {
-        return false;
-    }
 
     songs.thbgmFilePath = bgmurl.url();
     songs.isTrial = isTrial;
@@ -119,7 +111,7 @@ bool MainWindow::LoadFile(QString filepath)
     int ver = -1;
     for (auto &i : fil)
     {
-        if (~(ver = thVersionDetect(i.fileName())))
+        if (~(ver = thVersionDetect(i)))
         {
             datf = i.absoluteFilePath();
             break;
@@ -141,7 +133,14 @@ bool MainWindow::LoadFile(QString filepath)
     if (datw) delete datw;
     datw = new thDatWrapper(c, ver);
     if (ver > 50) ver /= 10; //95,125,128,143 etc
-    songs.LoadFile(datw, ver < 13 ? true : false);
+    thver = ver;
+    if (ver == 6)
+    {
+        songs.thbgmFilePath = url.url();
+        songs.LoadFile_th6(datw, fs::path(datf.toStdString()));
+    }
+    else
+        songs.LoadFile(datw, ver < 13 ? true : false);
     free(c);
     ui->thnameLabel->setText(url.url());
     SetupSongList();
@@ -244,17 +243,23 @@ QAudioFormat MainWindow::getAudioFormat(unsigned rate)
     return audioFormat;
 }
 
-int MainWindow::thVersionDetect(QString str)
+int MainWindow::thVersionDetect(QFileInfo i)
 {
-    //QRegExp r06("[Mm][Dd].[Dd][Aa][Tt]");
-    //if(r06.indexIn(str))return 6;
+    auto str = i.fileName();
+    QRegularExpression re06("[Mm][Dd]\\.[Dd][Aa][Tt]");
+    auto mch = re06.match(str);
+    if (mch.hasMatch())
+    {
+        thDatWrapper mdw(i.filePath().toStdString().c_str(), 6);
+        if (~mdw.getFileSize("musiccmt.txt")) return 6;
+        return -1;
+    }
     if (str.startsWith("alcostg"))
         return 103;
-    QRegExp rx("^[Tt][Hh](\\d{2,3})");
-    int pos = rx.indexIn(str);
-    if (pos == -1) return -1;
-    QStringList list = rx.capturedTexts();
-    QString ret = rx.cap(1);
+    QRegularExpression re("^[Tt][Hh](\\d{2,3})");
+    mch = re.match(str);
+    if (!mch.hasMatch()) return -1;
+    QString ret = mch.captured(1);
     return ret.toInt();
 }
 
@@ -292,7 +297,10 @@ void MainWindow::play(int index)
     stop();
     audioOutput = new QAudioOutput(info1, desiredFormat1, this);
     audioOutput->setVolume(1.0);
-    st = new LoopedPCMStreamer(std::filesystem::path(songs.thbgmFilePath.toStdString()),
+    fs::path srcfile = fs::path(songs.thbgmFilePath.toStdString());
+    if (thver == 6)
+        srcfile /= fs::path("bgm") / songs.songs[songIdx].filename.toStdString();
+    st = new LoopedPCMStreamer(srcfile,
         songs.songs[songIdx].start,
         songs.songs[songIdx].length,
         songs.songs[songIdx].loopStart);

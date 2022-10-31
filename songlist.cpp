@@ -4,6 +4,7 @@
 #include <QByteArray>
 #include <QTextCodec>
 #include <map>
+#include <fstream>
 
 SongList::SongList()
 {
@@ -34,9 +35,9 @@ bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
     if (!~sfmt)
     {
         sfmt = datw->getFileSize("albgm.fmt");
-        if (~sfmt)is_al = true;
+        if (~sfmt) is_al = true;
     }
-    if (!~sfmt)return false;
+    if (!~sfmt) return false;
     QByteArray *arr = new QByteArray((int)(sfmt + 1), '\0');
     char *dat = arr->data();
     if (is_al)
@@ -49,6 +50,28 @@ bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
     delete buf;
     delete arr;
     LoadComment(datw);
+    return true;
+}
+bool SongList::LoadFile_th6(thDatWrapper *mdw, const fs::path &bgmdir)
+{
+    songCnt = 17;
+    for (int i = 0; i < songCnt; ++i)
+    {
+        QString posf = QString("th06_%1.pos").arg(i + 1, 2, 10, QLatin1Char('0'));
+        QString wavf = QString("th06_%1.wav").arg(i + 1, 2, 10, QLatin1Char('0'));
+        fs::path wavp = (bgmdir / "../bgm").lexically_normal() / wavf.toStdString();
+        ssize_t psz = mdw->getFileSize(posf.toStdString().c_str());
+        if (!~psz) return false;
+        QByteArray arr = QByteArray((int)(psz + 1), '\0');
+        mdw->getFile(posf.toStdString().c_str(), arr.data());
+        uint32_t *lppt = (uint32_t*) arr.data();
+        songs[i].filename = wavf;
+        songs[i].start = waveGetDataChunk(wavp);
+        songs[i].rate = waveGetSamplingRate(wavp);
+        songs[i].loopStart = songs[i].start + lppt[0] * 4;
+        songs[i].length = songs[i].start + lppt[1] * 4;
+    }
+    LoadComment(mdw);
     return true;
 }
 void SongList::LoadComment(thDatWrapper *datw)
@@ -135,4 +158,44 @@ unsigned SongList::BEu32b(QBuffer *buf)
     for (int i = 0; i < 4; ++i) buf->getChar((char *)&c[i]);
     for (int i = 3; i >= 0; --i) res *= 256, res += c[i];
     return res;
+}
+
+uint32_t SongList::waveGetDataChunk(const fs::path &path)
+{
+    std::fstream wavef(path);
+    wavef.ignore(12);
+    uint32_t ret = 12;
+    char fourcc[4];
+    while (wavef.good())
+    {
+        uint32_t chnklen = 0;
+        wavef.read(fourcc, 4);
+        wavef.read((char*)&chnklen, 4);
+        ret += 8;
+        if (!memcmp(fourcc, "data", 4)) return ret;
+        ret += chnklen;
+        wavef.ignore(chnklen);
+    }
+    return ~0U;
+}
+uint32_t SongList::waveGetSamplingRate(const fs::path &path)
+{
+    std::fstream wavef(path);
+    wavef.ignore(12);
+    uint32_t ret = 0;
+    char fourcc[4];
+    while (wavef.good())
+    {
+        uint32_t chnklen = 0;
+        wavef.read(fourcc, 4);
+        wavef.read((char*)&chnklen, 4);
+        if (!memcmp(fourcc, "fmt ", 4))
+        {
+            wavef.ignore(4);
+            wavef.read((char*)&ret, 4);
+            return ret;
+        }
+        wavef.ignore(chnklen);
+    }
+    return ~0U;
 }

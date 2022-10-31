@@ -9,6 +9,7 @@
 #include <QTimer>
 #include <QSlider>
 #include <QCommandLineParser>
+#include <QFileInfo>
 #include <thread>
 #include "songlist.hpp"
 #include "thdatwrapper.hpp"
@@ -61,7 +62,8 @@ private:
     thDatWrapper *datw;
     QCommandLineParser *argp;
     int devi;
-    int thVersionDetect(QString str);
+    int thver;
+    int thVersionDetect(QFileInfo fi);
     void setPlayListTableHeader();
     void play(int index = -1);
     void stop();
