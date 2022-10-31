@@ -79,6 +79,7 @@ private slots:
     void on_loopButton_clicked();
     void on_prevButton_clicked();
     void on_nextButton_clicked();
+    void on_pauseButton_clicked(bool checked);
 };
 
 #endif // MAINWINDOW_H

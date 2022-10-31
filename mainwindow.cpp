@@ -193,6 +193,8 @@ MainWindow::~MainWindow()
 
 void MainWindow::stop()
 {
+    ui->pauseButton->setEnabled(false);
+    ui->pauseButton->setChecked(false);
     if (audioOutput)
     {
         audioOutput->stop();
@@ -317,8 +319,10 @@ void MainWindow::play(int index)
         d.init(devi);
         d.exec();
         devi = d.selection();
-        play(index);
+        return play(index);
     }
+    ui->pauseButton->setEnabled(true);
+    ui->pauseButton->setChecked(false);
 }
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
@@ -350,4 +354,11 @@ void MainWindow::on_nextButton_clicked()
     r = (r + 1) % rc;
     ui->playlistTable->setCurrentCell(r, c);
     play(r);
+}
+
+void MainWindow::on_pauseButton_clicked(bool checked)
+{
+    if (!audioOutput) return;
+    if (checked) audioOutput->suspend();
+    else audioOutput->resume();
 }
