@@ -24,7 +24,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     main.cpp \
     mainwindow.cpp \
-    boundedbuffer.cpp \
     thtk/thtk/bits.c \
     thtk/thtk/error.c \
     thtk/thtk/io.c \
@@ -43,10 +42,10 @@ SOURCES += \
     thtk/thtk/detect.c \
     thdatwrapper.cpp \
     songlist.cpp \
-    outputselectiondialog.cpp
+    outputselectiondialog.cpp \
+    loopedpcmstreamer.cpp
 
 HEADERS += \
-    boundedbuffer.hpp \
     mainwindow.hpp \
     thtk/thtk/bits.h \
     thtk/thtk/dat.h \
@@ -62,11 +61,14 @@ HEADERS += \
     thtk/thtk/util.h \
     thdatwrapper.hpp \
     songlist.hpp \
-    outputselectiondialog.hpp
+    outputselectiondialog.hpp \
+    loopedpcmstreamer.hpp
 
 FORMS += \
         mainwindow.ui \
     outputselectiondialog.ui
+
+CONFIG += c++17
 
 unix {
     isEmpty(PREFIX) {
@@ -75,7 +77,7 @@ unix {
     BINDIR = $$PREFIX/bin
     target.path = $$BINDIR
     INSTALLS += target
-    QMAKE_CXXFLAGS += -std=c++11 -Wall
+    QMAKE_CXXFLAGS += -Wall
 }
 
 macx {
