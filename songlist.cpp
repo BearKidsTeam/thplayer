@@ -3,6 +3,7 @@
 #include <QDebug>
 #include <QByteArray>
 #include <QTextCodec>
+#include <QRegularExpression>
 #include <map>
 #include <fstream>
 
@@ -102,11 +103,12 @@ void SongList::LoadComment(thDatWrapper *datw)
             if (!pcur)continue;
             if (!pcur->first.length())
             {
-                if (!i.startsWith("No."))
+                QRegularExpression re("^No\\.\\s*\\d*\\s*");
+                auto rem = re.match(i);
+                if (rem.hasMatch())
                 {
-                    if (i[0].unicode() != 0x266A) //'♪'
-                        pcur->first = i;
-                    else pcur->first = i.right(i.length() - 1);
+                    pcur->first = i.right(i.length() - rem.capturedLength(0));
+                    continue;
                 }
             }
             if (pcur->second.length())pcur->second += '\n';
