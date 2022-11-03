@@ -23,7 +23,6 @@ jobs:
           mkdir build && cd build
           cmake .. -DCMAKE_INSTALL_PREFIX=${MINGW_PREFIX} -DCMAKE_PREFIX_PATH="${MINGW_PREFIX}/qt5-static" -G Ninja
           cmake --build . -j
-          cmake --build . --target thtk/thtk/install/strip
           cd ..
       - name: Prepare for package
         continue-on-error: true

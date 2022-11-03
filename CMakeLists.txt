@@ -3,6 +3,8 @@ project(thplayer CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+set(BUILD_SHARED_LIBS OFF)
+option(WITH_OPENMP OFF)
 add_subdirectory(thtk EXCLUDE_FROM_ALL)
 
 #they assumed their project is the root project...
@@ -43,3 +45,7 @@ get_property(thtk_bindir DIRECTORY thtk/ PROPERTY BINARY_DIR)
 target_include_directories(thplayer PRIVATE ${thtk_bindir})
 
 target_link_libraries(thplayer thtk Qt5::Widgets Qt5::Multimedia)
+
+if(WIN32)
+    set_property(TARGET thplayer PROPERTY WIN32_EXECUTABLE True)
+endif()
