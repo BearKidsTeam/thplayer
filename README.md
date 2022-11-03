@@ -1,6 +1,6 @@
 # TouHou Player
 
-[![Build status](https://ci.appveyor.com/api/projects/status/3hnd8quh22grg4gv/branch/master?svg=true)](https://ci.appveyor.com/project/BLumia/thplayer/branch/master)
+[![Linux Build](https://github.com/BearKidsTeam/thplayer/actions/workflows/linux.yml/badge.svg)](https://github.com/BearKidsTeam/thplayer/actions/workflows/linux.yml) [![Windows MSYS2 Build](https://github.com/BearKidsTeam/thplayer/actions/workflows/windows-msys2.yml/badge.svg)](https://github.com/BearKidsTeam/thplayer/actions/workflows/windows-msys2.yml) [![macOS Build](https://github.com/BearKidsTeam/thplayer/actions/workflows/macos.yml/badge.svg)](https://github.com/BearKidsTeam/thplayer/actions/workflows/macos.yml)
 
 [Website](https://bearkidsteam.github.io/thplayer/)
 

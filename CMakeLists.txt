@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14.0)
+cmake_minimum_required(VERSION 3.16.0)
 project(thplayer CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -11,13 +11,19 @@ add_subdirectory(thtk EXCLUDE_FROM_ALL)
 target_include_directories(thtk PUBLIC thtk/)
 
 find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia)
+find_package(ECM 5.83.0 NO_MODULE)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTORCC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
-INCLUDE (CheckTypeSize)
+include(CheckTypeSize)
+
+if(ECM_FOUND)
+    set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
+    include(ECMAddAppIcon)
+endif()
 
 SET(CMAKE_EXTRA_INCLUDE_FILES "filesystem")
 check_type_size("std::filesystem::path::value_type" PATH_VALSIZE LANGUAGE CXX)
@@ -38,6 +44,14 @@ add_executable(thplayer
 
     res.qrc
 )
+
+if(ECM_FOUND)
+    ecm_add_app_icon(thplayer
+    ICONS
+        assets/256-thplayer.png
+        assets/thplayer.svg
+    )
+endif()
 
 add_dependencies(thplayer thtk)
 

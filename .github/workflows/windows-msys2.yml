@@ -16,7 +16,7 @@ jobs:
           msystem: MINGW64
           update: true
           pacboy: >-
-            toolchain:p ninja:p cmake:p
+            toolchain:p ninja:p cmake:p extra-cmake-modules:p
             qt5-static:p bison: flex:
       - name: Build
         run: |
@@ -29,7 +29,7 @@ jobs:
         run: |
           mkdir package_workspace && cd package_workspace
           cp ../build/thplayer.exe ./
-          strip -S ./thplayer.exe
+          strip -s ./thplayer.exe
           # windeployqt -winextras --no-quick-import --no-translations --no-opengl-sw --no-angle --no-system-d3d-compiler ./thplayer.exe
           ldd ./thplayer.exe > deps.txt
           bash -c 'while read -r line; do path=$(cut -d" " -f3 <<<$line); cp -v $path ./; done <<<$(grep ".*mingw.*bin" deps.txt); exit 0'
