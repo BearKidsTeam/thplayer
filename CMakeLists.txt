@@ -33,11 +33,11 @@ add_compile_definitions(PATH_VALSIZE=${PATH_VALSIZE})
 
 add_executable(thplayer
     main.cpp
-    loopedpcmstreamer.cpp
-    mainwindow.cpp
-    outputselectiondialog.cpp
-    songlist.cpp
-    thdatwrapper.cpp
+    loopedpcmstreamer.cpp loopedpcmstreamer.hpp
+    mainwindow.cpp mainwindow.hpp
+    outputselectiondialog.cpp outputselectiondialog.hpp
+    songlist.cpp songlist.hpp
+    thdatwrapper.cpp thdatwrapper.hpp
 
     mainwindow.ui
     outputselectiondialog.ui

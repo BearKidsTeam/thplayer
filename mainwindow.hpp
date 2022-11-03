@@ -74,12 +74,14 @@ private slots:
     void dropEvent(QDropEvent *event);
     void updateWidgets();
     void seek();
-    void on_playButton_clicked();
     void on_playlistTable_doubleClicked(const QModelIndex &index);
     void on_loopButton_clicked();
     void on_prevButton_clicked();
     void on_nextButton_clicked();
     void on_pauseButton_clicked(bool checked);
+    void on_action_Open_triggered();
+    void on_actionAbout_Qt_triggered();
+    void on_action_About_triggered();
 };
 
 #endif // MAINWINDOW_H

@@ -16,7 +16,7 @@ jobs:
           msystem: MINGW64
           update: true
           pacboy: >-
-            toolchain:p ninja:p cmake:p extra-cmake-modules:p
+            toolchain:p ninja:p cmake:p extra-cmake-modules:p icoutils:p
             qt5-static:p bison: flex:
       - name: Build
         run: |

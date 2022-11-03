@@ -238,11 +238,6 @@ void MainWindow::seek()
     st->seek_sample(ui->progressslider->value() / 100. * (cursong.length / 4.)); //TODO: don't hardcode the 4 here
 }
 
-void MainWindow::on_playButton_clicked()
-{
-    LoadFile(QFileDialog::getExistingDirectory(this, "Select game directory"));
-}
-
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 {
     QAudioFormat audioFormat;
@@ -368,3 +363,24 @@ void MainWindow::on_pauseButton_clicked(bool checked)
     if (checked) audioOutput->suspend();
     else audioOutput->resume();
 }
+
+void MainWindow::on_action_Open_triggered()
+{
+    LoadFile(QFileDialog::getExistingDirectory(this, "Select game directory"));
+}
+
+
+void MainWindow::on_actionAbout_Qt_triggered()
+{
+    qApp->aboutQt();
+}
+
+
+void MainWindow::on_action_About_triggered()
+{
+    QMessageBox::about(this, "About TouHou Player",
+                       QString("TouHou Player") + "\n"
+                       "TouHou BGM player for all platform." + "\n\n" +
+                       "https:://github.com/BearKidsTeam/thplayer");
+}
+
