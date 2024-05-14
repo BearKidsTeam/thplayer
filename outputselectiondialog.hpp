@@ -2,7 +2,7 @@
 #define OUTPUTSELECTIONDIALOG_H
 
 #include <QDialog>
-#include <QAudioDeviceInfo>
+#include <QMediaDevices>
 
 namespace Ui
 {

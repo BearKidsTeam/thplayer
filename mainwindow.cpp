@@ -12,6 +12,7 @@
 #include <QMimeData>
 #include <QRegularExpression>
 #include <QFontDatabase>
+#include <QMediaDevices>
 
 #include "outputselectiondialog.hpp"
 #include "loopedpcmstreamer.hpp"
@@ -63,9 +64,9 @@ bool MainWindow::args(QCommandLineParser &p)
         printf("List of available output devices:\n");
         printf("Device ID\tDevice Name\n");
         int id = 0;
-        for (auto &di : QAudioDeviceInfo::availableDevices(QAudio::AudioOutput))
+        for (auto &di : QMediaDevices::audioOutputs())
         {
-            printf("%d        \t%s\n", id++, di.deviceName().toStdString().c_str());
+            printf("%d        \t%s\n", id++, di.description().toStdString().c_str());
         }
         return true;
     }
@@ -78,7 +79,7 @@ bool MainWindow::args(QCommandLineParser &p)
             printf("--device: Number expected.\n");
             return true;
         }
-        if (t >= QAudioDeviceInfo::availableDevices(QAudio::AudioOutput).size() || t < 0)
+        if (t >= QMediaDevices::audioOutputs().size() || t < 0)
         {
             printf("--device: device ID out of range.\n");
             return true;
@@ -241,12 +242,9 @@ void MainWindow::seek()
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
 {
     QAudioFormat audioFormat;
-    audioFormat.setCodec("audio/pcm");
     audioFormat.setChannelCount(2);
     audioFormat.setSampleRate(rate);
-    audioFormat.setSampleSize(16);
-    audioFormat.setSampleType(QAudioFormat::SignedInt);
-    audioFormat.setByteOrder(QAudioFormat::LittleEndian);
+    audioFormat.setSampleFormat(QAudioFormat::SampleFormat::Int16);
     return audioFormat;
 }
 
@@ -293,16 +291,16 @@ void MainWindow::play(int index)
     // audio playback:
     QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
 
-    QAudioDeviceInfo info1(
-        ~devi ? QAudioDeviceInfo::availableDevices(QAudio::AudioOutput)[devi]
-        : QAudioDeviceInfo::defaultOutputDevice());
+    QAudioDevice info1(
+        ~devi ? QMediaDevices::audioOutputs()[devi]
+        : QMediaDevices::defaultAudioOutput());
     if (!info1.isFormatSupported(desiredFormat1))
     {
         qWarning() << "Default format not supported, trying to use the nearest.";
         desiredFormat1 = info1.preferredFormat();
     }
     stop();
-    audioOutput = new QAudioOutput(info1, desiredFormat1, this);
+    audioOutput = new QAudioSink(info1, desiredFormat1, this);
     audioOutput->setVolume(1.0);
     fs::path srcfile = qstring_to_path(songs.thbgmFilePath);
     if (thver == 6)

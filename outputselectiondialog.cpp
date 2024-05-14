@@ -1,6 +1,8 @@
 #include "outputselectiondialog.hpp"
 #include "ui_outputselectiondialog.h"
 
+#include <QAudioDevice>
+
 OutputSelectionDialog::OutputSelectionDialog(QWidget *parent) :
     QDialog(parent),
     ui(new Ui::OutputSelectionDialog)
@@ -15,12 +17,12 @@ OutputSelectionDialog::~OutputSelectionDialog()
 
 void OutputSelectionDialog::init(int curout)
 {
-    QList<QAudioDeviceInfo> dl = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
+    QList<QAudioDevice> dl = QMediaDevices::audioOutputs();
     if (curout < 0 || curout >= dl.size())curout = 0;
-    ui->label->setText(QString("The current audio output '%1' didn't work, please choose another one below.").arg(dl[curout].deviceName()));
+    ui->label->setText(QString("The current audio output '%1' didn't work, please choose another one below.").arg(dl[curout].description()));
     _selection = -1;
     ui->comboBox->clear();
-    for (auto di : dl)ui->comboBox->addItem(di.deviceName());
+    for (auto di : dl)ui->comboBox->addItem(di.description());
 }
 void OutputSelectionDialog::on_buttonBox_accepted()
 {

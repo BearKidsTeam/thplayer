@@ -10,7 +10,8 @@ add_subdirectory(thtk EXCLUDE_FROM_ALL)
 #they assumed their project is the root project...
 target_include_directories(thtk PUBLIC thtk/)
 
-find_package(Qt5 REQUIRED COMPONENTS Widgets Multimedia)
+find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia)
+find_package(ICU COMPONENTS uc i18n REQUIRED)
 find_package(ECM 5.83.0 NO_MODULE)
 
 set(CMAKE_AUTOMOC ON)
@@ -58,7 +59,7 @@ add_dependencies(thplayer thtk)
 get_property(thtk_bindir DIRECTORY thtk/ PROPERTY BINARY_DIR)
 target_include_directories(thplayer PRIVATE ${thtk_bindir})
 
-target_link_libraries(thplayer thtk Qt5::Widgets Qt5::Multimedia)
+target_link_libraries(thplayer thtk Qt6::Widgets Qt6::Multimedia ICU::uc ICU::i18n)
 
 if(WIN32)
     set_property(TARGET thplayer PROPERTY WIN32_EXECUTABLE True)

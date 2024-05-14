@@ -4,7 +4,8 @@
 #include <QMainWindow>
 #include <QDragEnterEvent>
 #include <QAudioFormat>
-#include <QAudioOutput>
+#include <QAudioDevice>
+#include <QAudioSink>
 #include <QBuffer>
 #include <QTimer>
 #include <QSlider>
@@ -56,7 +57,7 @@ private:
     SongList songs;
     song_t cursong;
     LoopedPCMStreamer *st = nullptr;
-    QAudioOutput *audioOutput = nullptr;
+    QAudioSink *audioOutput = nullptr;
     QAudioFormat getAudioFormat(unsigned rate);
     QTimer *timer;
     thDatWrapper *datw;
