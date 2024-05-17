@@ -2,42 +2,26 @@
 
 name: macOS Package
 
-# Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request, workflow_dispatch]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
     runs-on: macos-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
-
+        with:
+          version: '6.7.0'
+          modules: 'qtmultimedia'
       - name: Build
         working-directory: ./
         run: |
-          mkdir build && cd build
-          cmake ..
-          cmake --build . -j$(nproc)
-          cd ..
-
+          cmake -B build .
+          cmake --build build -j
       - name: Package
         id: package
         working-directory: ./
@@ -45,10 +29,9 @@ jobs:
         run: |
           macdeployqt build/thplayer.app
           zip -r9 --symlinks thplayer-macos.zip thplayer.app
-          
       - name: Upload
         if: steps.package.conclusion == 'success'
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macOS-Build
           path: thplayer-macos.zip

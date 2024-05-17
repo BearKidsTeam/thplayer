@@ -2,60 +2,42 @@
 
 name: Linux Package
 
-# Controls when the action will run. 
-on:
-  # Triggers the workflow on push or pull request events but only for the master branch
-  push:
-    branches: [ master ]
-  pull_request:
-    branches: [ master ]
+on: [push, pull_request, workflow_dispatch]
 
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
-
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  # This workflow contains a single job called "build"
   build:
-    # The type of runner that the job will run on
-    runs-on: ubuntu-22.04
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: recursive
-
       - name: Install build dept.
         run: |
           sudo apt update
-          sudo apt install qtbase5-dev qtmultimedia5-dev libqt5multimedia5-plugins
+          sudo apt install cmake qt6-base-dev qt6-multimedia-dev
           # for linuxdeploy: https://github.com/AppImage/AppImageKit/wiki/FUSE
+          # linuxdeploy-plugin-qt still requires qmake currently: https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues/156
           sudo add-apt-repository universe
-          sudo apt install libfuse2
-
+          sudo apt install libfuse2 qmake6
       - name: Get linuxdeploy
         run: |
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
           wget https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage
           chmod +x linuxdeploy-*.AppImage
-
       - name: Build
         working-directory: ./
         run: |
-          mkdir build && cd build
-          cmake ..
-          cmake --build . -j$(nproc)
-          cd ..
-
+          cmake -B build .
+          cmake --build build -j
       - name: Package
+        env:
+          QMAKE: /usr/bin/qmake6
         run: |
           ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
           mv TouHou_Player*.AppImage thplayer-linux.AppImage
-
       - name: Upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Linux-Build
           path: thplayer-linux.AppImage
