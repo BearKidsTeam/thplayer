@@ -15,7 +15,7 @@ No need for config. Drag the TouHou game program into `thplayer` main window, or
 The Touhou game versions we support are: 
 
 ``` plain
-th06, th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17, th18
+th06, th07, th08, th09, th10, th11, th12, th13, th14, th15, th16, th17, th18, th19
 th095, th125, th128, th143, th165, th185
 ```
 
@@ -27,26 +27,35 @@ This is all made possible by the [thpatch/thtk](https://github.com/thpatch/thtk/
 
 In order to build, you should get the source code first. We are using [thpatch/thtk](https://github.com/thpatch/thtk/) as a git submodule, since the *download as zip* option will **not** pack the submodules inside the zip file, you should use `git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git` instead.
 
-### Build using `qmake`
+(Tip: If you forget to use `--recurse-submodules` when you clone this repo, you need do `git submodule update --init --recursive` then)
 
-You can choose to build TouHou Player using `qmake` normally.
+### Dependencies
+
+Build system:
+
+- CMake
+
+This application requires the following dependencies:
+
+- Qt 6 (with `qtmultimedia` module)
+- ICU
+
+You can get those dependencies from your system package manager, use something like `vcpkg` and `conan`, or you can also build and install those dependencies manually if preferred. Whatever which approach you use, please ensure CMake can use `find_package` to find those dependencies.
+
+### Build using `cmake`
+
+Regular `cmake` build steps applies.
 
 ``` shell
 # Clone the repo
-git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git
-# Create a build folder
-mkdir ./thplayer/build && cd $_
+git clone --recurse-submodules https://github.com/BearKidsTeam/thplayer.git && cd thplayer
+# Configure
+cmake . -B build
 # Build it
-qmake ../thplayer.pro && make && make clean
+cmake --build build -j
 ```
 
-(Tip: If you forget to use `--recurse-submodules` when you clone this repo, you need do `git submodule update --init --recursive` then)
-
 After that, you'll get the runnable binary inside the build folder. Enjoy!
-
-### Build manually
-
-To build it manually, get Qt open-source version from [qt.io](https://www.qt.io/download-open-source/) or from your package manager, install it and open `thplayer.pro` using QtCreator, and build it as you wish! 
 
 ## License
 
