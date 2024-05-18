@@ -17,11 +17,21 @@ jobs:
         with:
           version: '6.7.0'
           modules: 'qtmultimedia'
+      - name: Install Conan
+        id: conan
+        working-directory: ./
+        shell: bash
+        run: |
+          pip3 install wheel setuptools
+          pip3 install conan --upgrade
+          conan --version
+          conan profile detect
       - name: Build
         working-directory: ./
         run: |
-          cmake -B build .
-          cmake --build build -j
+          conan install --requires=icu/74.2 --generator CMakeDeps --generator CMakeToolchain --build=missing
+          cmake . --preset conan-release
+          cmake --build --preset conan-release
       - name: Package
         id: package
         working-directory: ./

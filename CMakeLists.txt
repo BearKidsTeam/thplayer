@@ -32,7 +32,7 @@ SET(CMAKE_EXTRA_INCLUDE_FILES)
 
 add_compile_definitions(PATH_VALSIZE=${PATH_VALSIZE})
 
-add_executable(thplayer
+add_executable(thplayer WIN32 MACOSX_BUNDLE
     main.cpp
     loopedpcmstreamer.cpp loopedpcmstreamer.hpp
     mainwindow.cpp mainwindow.hpp
@@ -61,6 +61,3 @@ target_include_directories(thplayer PRIVATE ${thtk_bindir})
 
 target_link_libraries(thplayer thtk Qt6::Widgets Qt6::Multimedia ICU::uc ICU::i18n)
 
-if(WIN32)
-    set_property(TARGET thplayer PROPERTY WIN32_EXECUTABLE True)
-endif()
