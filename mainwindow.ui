@@ -180,6 +180,9 @@
    <addaction name="menu_Help"/>
   </widget>
   <action name="action_Open">
+   <property name="icon">
+    <iconset theme="document-open"/>
+   </property>
    <property name="text">
     <string>&amp;Open</string>
    </property>
@@ -190,6 +193,9 @@
    </property>
   </action>
   <action name="action_About">
+   <property name="icon">
+    <iconset theme="help-about"/>
+   </property>
    <property name="text">
     <string>&amp;About...</string>
    </property>
