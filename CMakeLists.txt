@@ -10,8 +10,7 @@ add_subdirectory(thtk EXCLUDE_FROM_ALL)
 #they assumed their project is the root project...
 target_include_directories(thtk PUBLIC thtk/)
 
-find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia)
-find_package(ICU COMPONENTS uc i18n REQUIRED)
+find_package(Qt6 6.11 REQUIRED COMPONENTS Widgets Multimedia)
 find_package(ECM 5.83.0 NO_MODULE)
 
 set(CMAKE_AUTOMOC ON)
@@ -24,6 +23,10 @@ include(CheckTypeSize)
 if(ECM_FOUND)
     set(CMAKE_MODULE_PATH ${ECM_MODULE_PATH} ${ECM_KDE_MODULE_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
     include(ECMAddAppIcon)
+endif()
+
+if(NOT ((DEFINED CACHE{QT_FEATURE_winsdkicu} OR DEFINED CACHE{QT_FEATURE_icu})))
+    message(FATAL_ERROR "Qt must be built with ICU support.")
 endif()
 
 SET(CMAKE_EXTRA_INCLUDE_FILES "filesystem")
@@ -59,5 +62,5 @@ add_dependencies(thplayer thtk)
 get_property(thtk_bindir DIRECTORY thtk/ PROPERTY BINARY_DIR)
 target_include_directories(thplayer PRIVATE ${thtk_bindir})
 
-target_link_libraries(thplayer thtk Qt6::Widgets Qt6::Multimedia ICU::uc ICU::i18n)
+target_link_libraries(thplayer thtk Qt6::Widgets Qt6::Multimedia)
 

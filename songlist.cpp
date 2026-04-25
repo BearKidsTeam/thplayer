@@ -2,10 +2,9 @@
 #include <QFileInfo>
 #include <QDebug>
 #include <QByteArray>
+#include <QStringConverter>
+#include <QStringDecoder>
 #include <QRegularExpression>
-#include <unicode/ustring.h>
-#include <unicode/unistr.h>
-#include <unicode/ucnv.h>
 #include <map>
 #include <fstream>
 
@@ -84,9 +83,9 @@ void SongList::LoadComment(thDatWrapper *datw)
     QByteArray *arr = new QByteArray((int)(scmt + 1), '\0');
     char *dat = arr->data();
     datw->getFile(isTrial ? "musiccmt_tr.txt" : "musiccmt.txt", dat);
-    icu::UnicodeString us(dat, "sjis");
-    std::string r;
-    QString s = QString::fromUtf8(us.toUTF8String(r).c_str());
+    QString s;
+    if (QStringConverter::availableCodecs().contains("Shift_JIS"))
+        s = QStringDecoder("Shift_JIS")(dat);
     std::map<QString, std::pair<QString, QString>> map;
     QStringList sl = s.split('\n');
     for (auto &i : sl)i = i.trimmed();
