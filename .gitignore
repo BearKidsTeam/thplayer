@@ -1,11 +1,16 @@
 # User Config
-*.pro.user
+*.user
 
 # Autosave
 *.autosave
 
 # Build Dir
 [Bb]uild/
+build-*/
+
+# IDE and clangd Files
+.vscode/
+.cache/
 
 # Debian Build Helper
 debian/.debhelper/

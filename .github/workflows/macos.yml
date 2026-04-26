@@ -9,29 +9,19 @@ jobs:
     runs-on: macos-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install Qt
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.7.0'
+          version: '6.11.0'
           modules: 'qtmultimedia'
-      - name: Install Conan
-        id: conan
-        working-directory: ./
-        shell: bash
-        run: |
-          pip3 install wheel setuptools
-          pip3 install conan --upgrade
-          conan --version
-          conan profile detect
       - name: Build
         working-directory: ./
         run: |
-          conan install --requires=icu/74.2 --generator CMakeDeps --generator CMakeToolchain --build=missing
-          cmake . --preset conan-release
-          cmake --build --preset conan-release
+          cmake -Bbuild . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
       - name: Package
         id: package
         working-directory: ./
@@ -41,7 +31,7 @@ jobs:
           zip -r9 --symlinks thplayer-macos.zip thplayer.app
       - name: Upload
         if: steps.package.conclusion == 'success'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: macOS-Build
           path: thplayer-macos.zip

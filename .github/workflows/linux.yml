@@ -9,17 +9,21 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           submodules: recursive
+      - name: Install Qt
+        uses: jurplel/install-qt-action@v4
+        with:
+          version: '6.11.0'
+          modules: 'qtmultimedia'
       - name: Install build dept.
         run: |
           sudo apt update
-          sudo apt install cmake qt6-base-dev qt6-multimedia-dev
+          sudo apt install cmake
           # for linuxdeploy: https://github.com/AppImage/AppImageKit/wiki/FUSE
-          # linuxdeploy-plugin-qt still requires qmake currently: https://github.com/linuxdeploy/linuxdeploy-plugin-qt/issues/156
           sudo add-apt-repository universe
-          sudo apt install libfuse2 qmake6
+          sudo apt install libfuse2
       - name: Get linuxdeploy
         run: |
           wget https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
@@ -31,13 +35,11 @@ jobs:
           cmake -B build .
           cmake --build build -j
       - name: Package
-        env:
-          QMAKE: /usr/bin/qmake6
         run: |
           ./linuxdeploy-x86_64.AppImage --appdir AppDir -e build/thplayer -d assets/thplayer.desktop -i assets/thplayer.svg --icon-filename thplayer -p qt -o appimage
           mv TouHou_Player*.AppImage thplayer-linux.AppImage
       - name: Upload
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: Linux-Build
           path: thplayer-linux.AppImage

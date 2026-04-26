@@ -64,7 +64,7 @@ void LoopedPCMStreamer::load()
     if (!maph)
     {
         unload();
-        return false;
+        return;
     }
 
     SYSTEM_INFO snfo;
@@ -79,7 +79,7 @@ void LoopedPCMStreamer::load()
     if (!mapped)
     {
         unload();
-        return false;
+        return;
     }
 #endif
 
