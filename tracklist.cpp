@@ -1,4 +1,4 @@
-#include "songlist.hpp"
+#include "tracklist.hpp"
 #include <QFileInfo>
 #include <QDebug>
 #include <QByteArray>
@@ -8,29 +8,34 @@
 #include <map>
 #include <fstream>
 
-SongList::SongList()
+TrackList::TrackList()
 {
     // nothing...
 }
 
-bool SongList::LoadFile(QString filepath, bool ignoreAnUint)
+bool TrackList::LoadFile(QString filepath, bool ignoreAnUint)
 {
     //left to be implemented by BLBLB
     return false;
 }
-bool SongList::LoadFile(QBuffer *buf, bool ignoreAnUint)
+bool TrackList::LoadFile(QBuffer *buf, bool ignoreAnUint)
 {
-    songCnt = 0;
+    tracks.clear();
     this->ignoreAnUint = ignoreAnUint;
-    while (SongListReadGroup(buf, songs[songCnt++]))
-    {
-        //qDebug() << songCnt;
-    };
-    songCnt--;
+    while (auto tr = TrackListReadGroup(buf)) tracks.push_back(tr.value());
+    if (tracks.size() > 0 && tracks[0].filename.startsWith("th13_")) //th13 spirit world shenanigans
+        for (size_t i = 0; i < tracks.size() - 1; ++i) {
+            if (tracks[i].filename.size() < 4) continue;
+            QString n = tracks[i].filename.chopped(4);
+            if (tracks[i + 1].filename.startsWith(n)) {
+                tracks[i].altmix = &tracks[i + 1];
+                tracks[i + 1].is_altmix = true;
+            }
+        }
     fileLoaded = true;
     return true;
 }
-bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
+bool TrackList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
 {
     ssize_t sfmt = datw->getFileSize(isTrial ? "thbgm_tr.fmt" : "thbgm.fmt");
     bool is_al = false;
@@ -54,11 +59,12 @@ bool SongList::LoadFile(thDatWrapper *datw, bool ignoreAnUint)
     LoadComment(datw);
     return true;
 }
-bool SongList::LoadFile_th6(thDatWrapper *mdw, const fs::path &bgmdir)
+bool TrackList::LoadFile_th6(thDatWrapper *mdw, const fs::path &bgmdir)
 {
-    songCnt = 17;
-    for (int i = 0; i < songCnt; ++i)
+    tracks.clear();
+    for (int i = 0; i < 17; ++i)
     {
+        track_t tr;
         QString posf = QString("th06_%1.pos").arg(i + 1, 2, 10, QLatin1Char('0'));
         QString wavf = QString("th06_%1.wav").arg(i + 1, 2, 10, QLatin1Char('0'));
         fs::path wavp = (bgmdir / "../bgm").lexically_normal() / wavf.toStdString();
@@ -67,16 +73,19 @@ bool SongList::LoadFile_th6(thDatWrapper *mdw, const fs::path &bgmdir)
         QByteArray arr = QByteArray((int)(psz + 1), '\0');
         mdw->getFile(posf.toStdString().c_str(), arr.data());
         uint32_t *lppt = (uint32_t*) arr.data();
-        songs[i].filename = wavf;
-        songs[i].start = waveGetDataChunk(wavp);
-        songs[i].rate = waveGetSamplingRate(wavp);
-        songs[i].loopStart = songs[i].start + lppt[0] * 4;
-        songs[i].length = songs[i].start + lppt[1] * 4;
+        tr.filename = wavf;
+        tr.start = waveGetDataChunk(wavp);
+        tr.rate = waveGetSamplingRate(wavp);
+        tr.loopStart = tr.start + lppt[0] * 4;
+        tr.length = tr.start + lppt[1] * 4;
+        tr.altmix = nullptr;
+        tr.is_altmix = false;
+        tracks.push_back(tr);
     }
     LoadComment(mdw);
     return true;
 }
-void SongList::LoadComment(thDatWrapper *datw)
+void TrackList::LoadComment(thDatWrapper *datw)
 {
     ssize_t scmt = datw->getFileSize(isTrial ? "musiccmt_tr.txt" : "musiccmt.txt");
     if (!~scmt)return;
@@ -118,45 +127,48 @@ void SongList::LoadComment(thDatWrapper *datw)
             pcur->second += i;
         }
     }
-    for (int i = 0; i < songCnt; ++i)
-        if (map.find(songs[i].filename) != map.end())
+    for (size_t i = 0; i < tracks.size(); ++i)
+        if (map.find(tracks[i].filename) != map.end())
         {
-            songs[i].title = map[songs[i].filename].first;
-            songs[i].comment = map[songs[i].filename].second;
+            tracks[i].title = map[tracks[i].filename].first;
+            tracks[i].comment = map[tracks[i].filename].second;
         }
     delete arr;
 }
 
-bool SongList::SongListReadGroup(QBuffer *buf, song_t &song)
+std::optional<track_t> TrackList::TrackListReadGroup(QBuffer *buf)
 {
-    if (buf->size() - buf->pos() < 52)return false;
+    if (buf->size() - buf->pos() < 52) return {};
     char name[16];
     for (int i = 0; i < 16; ++i)
     {
-        if (!buf->getChar(&name[i])) return false;
+        if (!buf->getChar(&name[i])) return {};
     }
-    song.filename = QString(name);
-    song.start = BEu32b(buf);
+    track_t track;
+    track.altmix = nullptr;
+    track.is_altmix = false;
+    track.filename = QString(name);
+    track.start = BEu32b(buf);
     if (!ignoreAnUint)
     {
-        song.length = BEu32b(buf);
-        song.loopStart = BEu32b(buf);
+        track.length = BEu32b(buf);
+        track.loopStart = BEu32b(buf);
         buf->seek(buf->pos() + 8);
     }
     else
     {
         buf->seek(buf->pos() + 4);
-        song.loopStart = BEu32b(buf);
-        song.length = BEu32b(buf);
+        track.loopStart = BEu32b(buf);
+        track.length = BEu32b(buf);
         buf->seek(buf->pos() + 4);
     }
-    song.rate = BEu32b(buf);
-    song.title = song.comment = "";
+    track.rate = BEu32b(buf);
+    track.title = track.comment = "";
     buf->seek(buf->pos() + 12);
-    return true;
+    return track;
 }
 
-unsigned SongList::BEu32b(QBuffer *buf)
+unsigned TrackList::BEu32b(QBuffer *buf)
 {
     unsigned char c[4];
     unsigned res = 0;
@@ -165,7 +177,7 @@ unsigned SongList::BEu32b(QBuffer *buf)
     return res;
 }
 
-uint32_t SongList::waveGetDataChunk(const fs::path &path)
+uint32_t TrackList::waveGetDataChunk(const fs::path &path)
 {
     std::fstream wavef(path);
     wavef.ignore(12);
@@ -183,7 +195,7 @@ uint32_t SongList::waveGetDataChunk(const fs::path &path)
     }
     return ~0U;
 }
-uint32_t SongList::waveGetSamplingRate(const fs::path &path)
+uint32_t TrackList::waveGetSamplingRate(const fs::path &path)
 {
     std::fstream wavef(path);
     wavef.ignore(12);

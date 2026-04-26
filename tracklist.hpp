@@ -1,30 +1,33 @@
-#ifndef SONGLIST_H
-#define SONGLIST_H
+#ifndef TRACKLIST_H
+#define TRACKLIST_H
 
 #include <filesystem>
+#include <vector>
+#include <optional>
 #include <QFile>
 #include <QBuffer>
 #include "thdatwrapper.hpp"
 
 namespace fs = std::filesystem;
 
-struct song_t
+struct track_t
 {
     QString filename, title, comment;
     unsigned start;
     unsigned loopStart;
     unsigned length;
     unsigned rate;
+    track_t *altmix;
+    bool is_altmix;
 };
 
-class SongList
+class TrackList
 {
 public:
-    song_t songs[50];
-    int songCnt = 0;
-    QString thbgmFilePath = nullptr;
+    std::vector<track_t> tracks;
+    QString thbgmFilePath;
     bool isTrial = false;
-    SongList();
+    TrackList();
     bool LoadFile(QString filepath, bool ignoreAnUint = false);
     bool LoadFile(QBuffer *buf, bool ignoreAnUint = false);
     bool LoadFile(thDatWrapper *datw, bool ignoreAnUint = false);
@@ -34,11 +37,11 @@ private:
 
     bool fileLoaded = false;
     bool ignoreAnUint = false;
-    bool SongListReadGroup(QBuffer *buf, song_t &song);
+    std::optional<track_t> TrackListReadGroup(QBuffer *buf);
     uint32_t waveGetDataChunk(const fs::path &path);
     uint32_t waveGetSamplingRate(const fs::path &path);
     static unsigned BEu32b(QBuffer *buf);
     void LoadComment(thDatWrapper *datw);
 };
 
-#endif // SONGLIST_H
+#endif // TRACKLIST_H

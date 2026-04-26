@@ -40,7 +40,7 @@ add_executable(thplayer WIN32 MACOSX_BUNDLE
     loopedpcmstreamer.cpp loopedpcmstreamer.hpp
     mainwindow.cpp mainwindow.hpp
     outputselectiondialog.cpp outputselectiondialog.hpp
-    songlist.cpp songlist.hpp
+    tracklist.cpp tracklist.hpp
     thdatwrapper.cpp thdatwrapper.hpp
 
     mainwindow.ui

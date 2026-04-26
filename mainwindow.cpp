@@ -120,8 +120,8 @@ bool MainWindow::LoadFile(QString filepath)
         bgmurl = QUrl(url.url() + "/albgm.dat");
     }
 
-    songs.thbgmFilePath = bgmurl.url();
-    songs.isTrial = isTrial;
+    tracklist.thbgmFilePath = bgmurl.url();
+    tracklist.isTrial = isTrial;
 
     QDir gamedir = QDir(url.url());
     QStringList sl;
@@ -145,13 +145,13 @@ bool MainWindow::LoadFile(QString filepath)
     thver = ver;
     if (ver == 6)
     {
-        songs.thbgmFilePath = url.url();
-        songs.LoadFile_th6(datw, fs::path(datf.toStdString()));
+        tracklist.thbgmFilePath = url.url();
+        tracklist.LoadFile_th6(datw, fs::path(datf.toStdString()));
     }
     else
-        songs.LoadFile(datw, ver < 13 ? true : false);
+        tracklist.LoadFile(datw, ver < 13 ? true : false);
     ui->thnameLabel->setText(url.url());
-    SetupSongList();
+    SetupTrackList();
     return true;
 }
 
@@ -160,32 +160,37 @@ bool MainWindow::LoadFile(QString filepath)
  *    Call to load thbgm.songs file.
  *    Then load song data from SongList to playlist table.
  */
-bool MainWindow::SetupSongList()
+bool MainWindow::SetupTrackList()
 {
     ui->playlistTable->clear();
     setPlayListTableHeader();
-    ui->playlistTable->setRowCount(songs.songCnt);
     ui->playlistTable->setSortingEnabled(false);
     QFont fnt = QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont);
-    for (int i = 0; i < songs.songCnt; i++)
+    for (int i = 0; i < tracklist.tracks.size(); i++)
     {
-        song_t *song = &songs.songs[i];
-        QString fileName(song->filename);
+        track_t *trk = &tracklist.tracks[i];
+        if (trk->is_altmix) continue;
+        QString fileName(trk->filename);
 
-        QTableWidgetItem *itemTitle = new QTableWidgetItem(song->title);
+        QTableWidgetItem *itemTitle = new QTableWidgetItem(trk->title);
         QTableWidgetItem *itemName = new QTableWidgetItem(fileName);
-        QTableWidgetItem *itemStart = new QTableWidgetItem("0x" + QString::number(song->start, 16));
-        QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x" + QString::number(song->loopStart, 16));
-        QTableWidgetItem *itemLen = new QTableWidgetItem("0x" + QString::number(song->length, 16));
-        QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(song->rate));
-        ui->playlistTable->setItem(i, 0, itemTitle);
-        ui->playlistTable->setItem(i, 1, itemName);
-        ui->playlistTable->setItem(i, 2, itemStart);
-        ui->playlistTable->setItem(i, 3, itemLpSt);
-        ui->playlistTable->setItem(i, 4, itemLen);
-        ui->playlistTable->setItem(i, 5, itemRate);
-        for (int j = 1; j < 6; ++j)
-            ui->playlistTable->item(i, j)->setData(Qt::ItemDataRole::FontRole, fnt);
+        QTableWidgetItem *itemStart = new QTableWidgetItem("0x" + QString::number(trk->start, 16));
+        QTableWidgetItem *itemLpSt = new QTableWidgetItem("0x" + QString::number(trk->loopStart, 16));
+        QTableWidgetItem *itemLen = new QTableWidgetItem("0x" + QString::number(trk->length, 16));
+        QTableWidgetItem *itemRate = new QTableWidgetItem(QString::number(trk->rate));
+        int r = ui->playlistTable->rowCount();
+        ui->playlistTable->insertRow(r);
+        ui->playlistTable->setItem(r, 0, itemTitle);
+        ui->playlistTable->setItem(r, 1, itemName);
+        ui->playlistTable->setItem(r, 2, itemStart);
+        ui->playlistTable->setItem(r, 3, itemLpSt);
+        ui->playlistTable->setItem(r, 4, itemLen);
+        ui->playlistTable->setItem(r, 5, itemRate);
+        for (int j = 0; j < 6; ++j) {
+            auto itm = ui->playlistTable->item(r, j);
+            if (j != 0) itm->setData(Qt::ItemDataRole::FontRole, fnt);
+            itm->setData(Qt::UserRole + 1, i);
+        }
     }
     //ui->playlistTable->setSortingEnabled(true);
     return true;
@@ -231,12 +236,12 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::updateWidgets()
 {
     if (!st) return;
-    if (!cursong.length) return;
-    ui->progressslider->setValue((int)100.*st->pos_sample() / (cursong.length / 4)); //TODO: don't hardcode the 4 here
+    if (!curtrk.length) return;
+    ui->progressslider->setValue((int)100.*st->pos_sample() / (curtrk.length / 4)); //TODO: don't hardcode the 4 here
 }
 void MainWindow::seek()
 {
-    st->seek_sample(ui->progressslider->value() / 100. * (cursong.length / 4.)); //TODO: don't hardcode the 4 here
+    st->seek_sample(ui->progressslider->value() / 100. * (curtrk.length / 4.)); //TODO: don't hardcode the 4 here
 }
 
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
@@ -280,16 +285,16 @@ void MainWindow::setPlayListTableHeader()
 
 void MainWindow::play(int index)
 {
-    int songIdx = -1;
-    if (index != -1) songIdx = index;
-    if (songIdx < 0 || songIdx >= songs.songCnt) return;
+    int trkIdx = -1;
+    if (index != -1) trkIdx = index;
+    if (trkIdx < 0 || trkIdx >= tracklist.tracks.size()) return;
 
-    ui->songnameLabel->setText(songs.songs[songIdx].title.length() ? songs.songs[songIdx].title : songs.songs[songIdx].filename);
-    ui->commentTB->setText(songs.songs[songIdx].comment);
-    cursong = songs.songs[songIdx];
+    ui->trknameLabel->setText(tracklist.tracks[trkIdx].title.length() ? tracklist.tracks[trkIdx].title : tracklist.tracks[trkIdx].filename);
+    ui->commentTB->setText(tracklist.tracks[trkIdx].comment);
+    curtrk = tracklist.tracks[trkIdx];
 
     // audio playback:
-    QAudioFormat desiredFormat1 = getAudioFormat(songs.songs[songIdx].rate);
+    QAudioFormat desiredFormat1 = getAudioFormat(tracklist.tracks[trkIdx].rate);
 
     QAudioDevice info1(
         ~devi ? QMediaDevices::audioOutputs()[devi]
@@ -302,13 +307,13 @@ void MainWindow::play(int index)
     stop();
     audioOutput = new QAudioSink(info1, desiredFormat1, this);
     audioOutput->setVolume(1.0);
-    fs::path srcfile = qstring_to_path(songs.thbgmFilePath);
+    fs::path srcfile = qstring_to_path(tracklist.thbgmFilePath);
     if (thver == 6)
-        srcfile /= fs::path("bgm") / songs.songs[songIdx].filename.toStdString();
+        srcfile /= fs::path("bgm") / tracklist.tracks[trkIdx].filename.toStdString();
     st = new LoopedPCMStreamer(srcfile,
-        songs.songs[songIdx].start,
-        songs.songs[songIdx].length,
-        songs.songs[songIdx].loopStart);
+        tracklist.tracks[trkIdx].start,
+        tracklist.tracks[trkIdx].length,
+        tracklist.tracks[trkIdx].loopStart);
     st->open(QIODevice::OpenModeFlag::ReadOnly);
 
     audioOutput->start(st);
@@ -326,7 +331,7 @@ void MainWindow::play(int index)
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 {
-    play(index.row());
+    play(index.data(Qt::UserRole + 1).toInt());
 }
 
 void MainWindow::on_loopButton_clicked()

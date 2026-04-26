@@ -12,7 +12,7 @@
 #include <QCommandLineParser>
 #include <QFileInfo>
 #include <thread>
-#include "songlist.hpp"
+#include "tracklist.hpp"
 #include "thdatwrapper.hpp"
 
 namespace Ui
@@ -47,15 +47,15 @@ class MainWindow : public QMainWindow
 public:
     explicit MainWindow(QWidget *parent = 0);
     bool LoadFile(QString filepath);
-    bool SetupSongList();
+    bool SetupTrackList();
     bool args(QCommandLineParser &p);
     ~MainWindow();
 
 private:
     unsigned loopStart;
     Ui::MainWindow *ui;
-    SongList songs;
-    song_t cursong;
+    TrackList tracklist;
+    track_t curtrk;
     LoopedPCMStreamer *st = nullptr;
     QAudioSink *audioOutput = nullptr;
     QAudioFormat getAudioFormat(unsigned rate);
