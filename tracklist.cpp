@@ -7,6 +7,7 @@
 #include <QRegularExpression>
 #include <map>
 #include <fstream>
+#include <qlogging.h>
 
 TrackList::TrackList()
 {
@@ -148,32 +149,56 @@ std::optional<track_t> TrackList::TrackListReadGroup(QBuffer *buf)
     track.altmix = nullptr;
     track.is_altmix = false;
     track.filename = QString(name);
-    track.start = BEu32b(buf);
+    track.start = LEu32b(buf);
+    uint16_t nch, bps;
     if (!ignoreAnUint)
     {
-        track.length = BEu32b(buf);
-        track.loopStart = BEu32b(buf);
-        buf->seek(buf->pos() + 8);
+        track.length = LEu32b(buf);
+        track.loopStart = LEu32b(buf);
+        buf->seek(buf->pos() + 6);
     }
     else
     {
         buf->seek(buf->pos() + 4);
-        track.loopStart = BEu32b(buf);
-        track.length = BEu32b(buf);
-        buf->seek(buf->pos() + 4);
+        track.loopStart = LEu32b(buf);
+        track.length = LEu32b(buf);
+        buf->seek(buf->pos() + 2);
     }
-    track.rate = BEu32b(buf);
+    nch = LEu16b(buf);
+    track.rate = LEu32b(buf);
+    buf->seek(buf->pos() + 6);
+    bps = LEu16b(buf);
     track.title = track.comment = "";
-    buf->seek(buf->pos() + 12);
+    buf->seek(buf->pos() + 4);
+    if (nch != 2 || bps != 16) {
+        qWarning() << "track " << track.filename << " is not S16_LE stereo and is not supported";
+        qDebug() << nch << bps;
+        return {};
+    }
     return track;
 }
 
-unsigned TrackList::BEu32b(QBuffer *buf)
+uint32_t TrackList::LEu32b(QBuffer *buf)
 {
-    unsigned char c[4];
-    unsigned res = 0;
-    for (int i = 0; i < 4; ++i) buf->getChar((char *)&c[i]);
-    for (int i = 3; i >= 0; --i) res *= 256, res += c[i];
+    uint8_t c[4];
+    uint32_t res = 0;
+    if (buf->read((char*)c, 4) != 4) { return ~0; }
+    for (int i = 3; i >= 0; --i) {
+        res <<= 8;
+        res |= c[i];
+    }
+    return res;
+}
+
+uint16_t TrackList::LEu16b(QBuffer *buf)
+{
+    uint8_t c[2];
+    uint32_t res = 0;
+    if (buf->read((char*)c, 2) != 2) { return ~0; }
+    for (int i = 1; i >= 0; --i) {
+        res <<= 8;
+        res |= c[i];
+    }
     return res;
 }
 
@@ -197,9 +222,11 @@ uint32_t TrackList::waveGetDataChunk(const fs::path &path)
 }
 uint32_t TrackList::waveGetSamplingRate(const fs::path &path)
 {
+    //this code is not endian-agnostic
     std::fstream wavef(path);
     wavef.ignore(12);
     uint32_t ret = 0;
+    uint16_t nch = 0, bps = 0;
     char fourcc[4];
     while (wavef.good())
     {
@@ -208,11 +235,18 @@ uint32_t TrackList::waveGetSamplingRate(const fs::path &path)
         wavef.read((char*)&chnklen, 4);
         if (!memcmp(fourcc, "fmt ", 4))
         {
-            wavef.ignore(4);
+            wavef.ignore(2);
+            wavef.read((char*)&nch, 2);
             wavef.read((char*)&ret, 4);
+            wavef.ignore(6);
+            wavef.read((char*)&bps, 2);
+            if (nch != 2 || bps != 16) {
+                qWarning() << path.c_str() << " is not a S16_LE stereo wave file and is not supported.";
+                return ~0;
+            }
             return ret;
         }
         wavef.ignore(chnklen);
     }
-    return ~0U;
+    return ~0;
 }

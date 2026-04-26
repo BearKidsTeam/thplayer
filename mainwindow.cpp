@@ -3,16 +3,20 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
+#include <set>
 #include <QDebug>
 #include <QDir>
 #include <QFileInfo>
 #include <QFileDialog>
-#include <QTableWidgetItem>
-#include <QMessageBox>
-#include <QMimeData>
-#include <QRegularExpression>
 #include <QFontDatabase>
 #include <QMediaDevices>
+#include <QMessageBox>
+#include <QMimeData>
+#include <QProgressDialog>
+#include <QRegularExpression>
+#include <QTableWidgetItem>
+#include <QThread>
 
 #include "outputselectiondialog.hpp"
 #include "loopedpcmstreamer.hpp"
@@ -81,6 +85,7 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(timer, &QTimer::timeout, this, &MainWindow::updateWidgets);
     connect(ui->progressslider, &QSlider::sliderReleased, this, &MainWindow::seek);
     connect(ui->altmixButton, &QPushButton::clicked, this, &MainWindow::switch_mix);
+    connect(ui->action_Export, &QAction::triggered, this, &MainWindow::export_selected_tracks);
     timer->start();
 }
 bool MainWindow::args(QCommandLineParser &p)
@@ -395,6 +400,68 @@ void MainWindow::play(int index)
     ui->pauseButton->setChecked(false);
 }
 
+struct WaveFmtChunk {
+    uint16_t compr;
+    uint16_t nch;
+    uint32_t rate;
+    uint32_t aBps;
+    uint16_t align;
+    uint16_t bps;
+};
+
+struct WaveCuePoint {
+    uint32_t id;
+    uint32_t pos;
+    char chunkid[4];
+    uint32_t chunk_start;
+    uint32_t block_start;
+    uint32_t sampl_start;
+};
+
+static void export_wave(const track_t &trk, const fs::path &path, const fs::path &srcfile) {
+    // this code is not endian-agnostic
+    WaveFmtChunk fmt {
+        .compr = 1,
+        .nch = 2,
+        .rate = trk.rate,
+        .aBps = trk.rate * 2 * 2,
+        .align = 4,
+        .bps = 16
+    };
+    uint32_t szfmt = sizeof(WaveFmtChunk);
+    WaveCuePoint cue {
+        .id = 0,
+        .pos = 0,
+        .chunkid = {'d', 'a', 't', 'a'},
+        .chunk_start = 0,
+        .block_start = 0,
+        .sampl_start = trk.loopStart / 4, // this is a sample No.
+    };
+    uint32_t szcue = 4 + sizeof(WaveCuePoint);
+    uint32_t ncue = 1;
+    uint32_t szdata = trk.length;
+    uint32_t size = 8 + szfmt + 8 + szcue + 8 + szdata;
+
+    // just borrowing the mmap'ing routines ... we don't need its qobject aspect here.
+    LoopedPCMStreamer *mapper = new LoopedPCMStreamer(srcfile, trk, nullptr);
+    std::ofstream f(path);
+    f.write("RIFF", 4);
+    f.write(reinterpret_cast<char*>(&size), 4);
+    f.write("WAVE", 4);
+    f.write("fmt ", 4);
+    f.write(reinterpret_cast<char*>(&szfmt), 4);
+    f.write(reinterpret_cast<char*>(&fmt), szfmt);
+    f.write("cue ", 4);
+    f.write(reinterpret_cast<char*>(&szcue), 4);
+    f.write(reinterpret_cast<char*>(&ncue), 4);
+    f.write(reinterpret_cast<char*>(&cue), sizeof(WaveCuePoint));
+    f.write("data", 4);
+    f.write(reinterpret_cast<char*>(&szdata), 4);
+    f.write(reinterpret_cast<const char*>(mapper->get_data()), szdata);
+    f.close();
+    delete mapper;
+}
+
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 {
     play(index.data(Qt::ItemDataRole::UserRole + 1).toInt());
@@ -440,6 +507,71 @@ void MainWindow::switch_mix()
     new_ao->setVolume(1.);
     altmix_state = 1 - altmix_state;
     ui->altmixButton->setChecked(altmix_state);
+}
+
+class ExportThread : public QThread
+{
+    Q_OBJECT
+public:
+    ExportThread(std::set<track_t*>&& ptracks, const fs::path& targetp, const fs::path& thbgmpath, int thver, QObject *parent = nullptr) :
+        QThread(parent),
+        ptracks(ptracks),
+        targetp(targetp),
+        thbgmpath(thbgmpath),
+        thver(thver) {}
+protected:
+    void run() override {
+        for (auto tp : ptracks) {
+            fs::path srcfile(thbgmpath);
+            if (thver == 6)
+                srcfile /= fs::path("bgm") / tp->filename.toStdString();
+            export_wave(*tp, targetp / qstring_to_path(tp->filename), srcfile);
+            Q_EMIT track_exported();
+        }
+    }
+Q_SIGNALS:
+    void track_exported();
+private:
+    std::set<track_t*> ptracks;
+    fs::path targetp;
+    fs::path thbgmpath;
+    int thver;
+};
+
+void MainWindow::export_selected_tracks() {
+    if (ui->playlistTable->selectedItems().empty()) {
+        QMessageBox::information(this, "No tracks selected", "Please select at least one track to export.");
+        return;
+    }
+    auto qurlp = QFileDialog::getExistingDirectoryUrl(this, "Select destination directory");
+    if (qurlp.isEmpty()) return;
+    auto p = qstring_to_path(qurlp.path());
+
+    std::set<track_t*> ptracks;
+    for (auto i : ui->playlistTable->selectedItems()) {
+        int trkidx = i->data(Qt::ItemDataRole::UserRole + 1).toInt();
+        ptracks.insert(&tracklist.tracks[trkidx]);
+        if (tracklist.tracks[trkidx].altmix)
+            ptracks.insert(tracklist.tracks[trkidx].altmix);
+    }
+
+    auto progress = new QProgressDialog("Girls do their best now and are preparing.\nPlease watch warmly until it is ready...", "", 0, ptracks.size(), this);
+    progress->setWindowModality(Qt::WindowModal);
+    progress->setCancelButton(nullptr);
+    progress->setValue(0);
+    progress->show();
+
+    auto exportthrd = new ExportThread(std::move(ptracks), p, qstring_to_path(tracklist.thbgmFilePath), thver, this);
+    connect(exportthrd, &ExportThread::track_exported, [progress] {
+        progress->setValue(progress->value() + 1);
+        if (progress->value() == progress->maximum()) {
+            progress->close();
+            delete progress;
+        }
+    });
+    connect(exportthrd, &ExportThread::finished, exportthrd, &ExportThread::deleteLater);
+
+    exportthrd->start();
 }
 
 void MainWindow::on_pauseButton_clicked(bool checked)

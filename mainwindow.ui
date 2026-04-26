@@ -202,6 +202,8 @@
      <string>&amp;File</string>
     </property>
     <addaction name="action_Open"/>
+    <addaction name="separator"/>
+    <addaction name="action_Export"/>
    </widget>
    <widget class="QMenu" name="menu_Help">
     <property name="title">
@@ -232,6 +234,14 @@
    </property>
    <property name="text">
     <string>&amp;About...</string>
+   </property>
+  </action>
+  <action name="action_Export">
+   <property name="icon">
+    <iconset theme="document-save"/>
+   </property>
+   <property name="text">
+    <string>Export selected tracks...</string>
    </property>
   </action>
  </widget>

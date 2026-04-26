@@ -33,6 +33,7 @@ LoopedPCMStreamer::~LoopedPCMStreamer()
 
 void LoopedPCMStreamer::load()
 {
+    //TODO: check file has sufficient data remaining for mapped_length
 #ifndef _WIN32
     fd = open(srcpath.c_str(), 0);
     if (!~fd) return;
@@ -126,6 +127,10 @@ void LoopedPCMStreamer::callback(QSpan<int16_t> samples) {
         Q_EMIT warped();
     }
     position.store(p);
+}
+
+const void* LoopedPCMStreamer::get_data() const {
+    return (void*)((char*)mapped + mapped_offset);
 }
 
 void LoopedPCMStreamer::seek_sample(uint64_t pos)

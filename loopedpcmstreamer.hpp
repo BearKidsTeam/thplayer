@@ -23,6 +23,7 @@ public:
     uint64_t length_sample() const;
 
     void callback(QSpan<int16_t> samples);
+    const void *get_data() const;
 
 Q_SIGNALS:
     void warped();

@@ -13,6 +13,7 @@ namespace fs = std::filesystem;
 struct track_t
 {
     QString filename, title, comment;
+    //all offsets here are in bytes, not samples
     unsigned start;
     unsigned loopStart;
     unsigned length;
@@ -40,7 +41,8 @@ private:
     std::optional<track_t> TrackListReadGroup(QBuffer *buf);
     uint32_t waveGetDataChunk(const fs::path &path);
     uint32_t waveGetSamplingRate(const fs::path &path);
-    static unsigned BEu32b(QBuffer *buf);
+    static uint32_t LEu32b(QBuffer *buf);
+    static uint16_t LEu16b(QBuffer *buf);
     void LoadComment(thDatWrapper *datw);
 };
 

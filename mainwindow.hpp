@@ -11,7 +11,6 @@
 #include <QSlider>
 #include <QCommandLineParser>
 #include <QFileInfo>
-#include <thread>
 #include "tracklist.hpp"
 #include "thdatwrapper.hpp"
 
@@ -79,6 +78,7 @@ private Q_SLOTS:
     void updateWidgets();
     void seek();
     void switch_mix();
+    void export_selected_tracks();
     void on_playlistTable_doubleClicked(const QModelIndex &index);
     void on_loopButton_clicked();
     void on_prevButton_clicked();
