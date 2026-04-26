@@ -180,6 +180,10 @@ bool MainWindow::LoadFile(QString filepath)
     if (ver == 13)
         ui->altmixButton->setText("Spirit World [C]");
     ui->thnameLabel->setText(url.url());
+    ui->progressslider->setValue(0);
+    ui->trknameLabel->setText("No track is playing...");
+    ui->timestampLabel->setText("--:--");
+    ui->altmixButton->hide();
     SetupTrackList();
     return true;
 }
@@ -219,7 +223,7 @@ bool MainWindow::SetupTrackList()
         for (int j = 0; j < 6; ++j) {
             auto itm = ui->playlistTable->item(r, j);
             if (j != 0) itm->setData(Qt::ItemDataRole::FontRole, fnt);
-            itm->setData(Qt::UserRole + 1, i);
+            itm->setData(Qt::ItemDataRole::UserRole + 1, i);
         }
     }
     //ui->playlistTable->setSortingEnabled(true);
@@ -273,9 +277,14 @@ void MainWindow::dropEvent(QDropEvent *event)
 void MainWindow::updateWidgets()
 {
     auto *active_st = altmix_state == 1 ? st_alt : st;
+    auto *active_ao = altmix_state == 1 ? audioOutput_alt : audioOutput;
     if (!active_st) return;
     if (!curtrk.length) return;
     ui->progressslider->setValue((int)100. * active_st->pos_sample() / active_st->length_sample());
+    int s = active_st->pos_sample() / active_ao->format().sampleRate();
+    int m = s / 60;
+    s %= 60;
+    ui->timestampLabel->setText(QString("%1:%2").arg(m, 2, 10, '0').arg(s, 2, 10, '0'));
 }
 void MainWindow::seek()
 {
@@ -388,7 +397,7 @@ void MainWindow::play(int index)
 
 void MainWindow::on_playlistTable_doubleClicked(const QModelIndex &index)
 {
-    play(index.data(Qt::UserRole + 1).toInt());
+    play(index.data(Qt::ItemDataRole::UserRole + 1).toInt());
 }
 
 void MainWindow::on_loopButton_clicked()
@@ -404,7 +413,7 @@ void MainWindow::on_prevButton_clicked()
     int rc = ui->playlistTable->rowCount();
     r = (r + rc - 1) % rc;
     ui->playlistTable->setCurrentCell(r, c);
-    play(r);
+    play(ui->playlistTable->currentItem()->data(Qt::ItemDataRole::UserRole + 1).toInt());
 }
 
 void MainWindow::on_nextButton_clicked()
@@ -414,7 +423,7 @@ void MainWindow::on_nextButton_clicked()
     int rc = ui->playlistTable->rowCount();
     r = (r + 1) % rc;
     ui->playlistTable->setCurrentCell(r, c);
-    play(r);
+    play(ui->playlistTable->currentItem()->data(Qt::ItemDataRole::UserRole + 1).toInt());
 }
 
 void MainWindow::switch_mix()
