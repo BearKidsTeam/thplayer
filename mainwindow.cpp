@@ -163,6 +163,7 @@ bool MainWindow::LoadFile(QString filepath)
 bool MainWindow::SetupTrackList()
 {
     ui->playlistTable->clear();
+    ui->playlistTable->setRowCount(0);
     setPlayListTableHeader();
     ui->playlistTable->setSortingEnabled(false);
     QFont fnt = QFontDatabase::systemFont(QFontDatabase::SystemFont::FixedFont);
@@ -212,7 +213,6 @@ void MainWindow::stop()
         audioOutput->stop();
         delete audioOutput;
         audioOutput = nullptr;
-        st->close();
         delete st;
         st = nullptr;
     }
@@ -237,11 +237,11 @@ void MainWindow::updateWidgets()
 {
     if (!st) return;
     if (!curtrk.length) return;
-    ui->progressslider->setValue((int)100.*st->pos_sample() / (curtrk.length / 4)); //TODO: don't hardcode the 4 here
+    ui->progressslider->setValue((int)100.*st->pos_sample() / st->length_sample());
 }
 void MainWindow::seek()
 {
-    st->seek_sample(ui->progressslider->value() / 100. * (curtrk.length / 4.)); //TODO: don't hardcode the 4 here
+    st->seek_sample(ui->progressslider->value() / 100. * st->length_sample());
 }
 
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
@@ -310,13 +310,9 @@ void MainWindow::play(int index)
     fs::path srcfile = qstring_to_path(tracklist.thbgmFilePath);
     if (thver == 6)
         srcfile /= fs::path("bgm") / tracklist.tracks[trkIdx].filename.toStdString();
-    st = new LoopedPCMStreamer(srcfile,
-        tracklist.tracks[trkIdx].start,
-        tracklist.tracks[trkIdx].length,
-        tracklist.tracks[trkIdx].loopStart);
-    st->open(QIODevice::OpenModeFlag::ReadOnly);
+    st = new LoopedPCMStreamer(srcfile, tracklist.tracks[trkIdx]);
 
-    audioOutput->start(st);
+    audioOutput->start([this](QSpan<int16_t> s){ st->callback(s); });
     if (audioOutput->error())
     {
         OutputSelectionDialog d;
@@ -383,7 +379,7 @@ void MainWindow::on_action_About_triggered()
 {
     QMessageBox::about(this, "About TouHou Player",
                        QString("TouHou Player") + "\n"
-                       "TouHou BGM player for all platform." + "\n\n" +
+                       "TouHou BGM player for all platforms." + "\n\n" +
                        "https:://github.com/BearKidsTeam/thplayer");
 }
 
