@@ -58,6 +58,9 @@ private:
     track_t curtrk;
     LoopedPCMStreamer *st = nullptr;
     QAudioSink *audioOutput = nullptr;
+    LoopedPCMStreamer *st_alt = nullptr;
+    QAudioSink *audioOutput_alt = nullptr;
+    int altmix_state;
     QAudioFormat getAudioFormat(unsigned rate);
     QTimer *timer;
     thDatWrapper *datw;
@@ -69,12 +72,13 @@ private:
     void play(int index = -1);
     void stop();
 
-private slots:
+private Q_SLOTS:
     // drag n drop
     void dragEnterEvent(QDragEnterEvent *event);
     void dropEvent(QDropEvent *event);
     void updateWidgets();
     void seek();
+    void switch_mix();
     void on_playlistTable_doubleClicked(const QModelIndex &index);
     void on_loopButton_clicked();
     void on_prevButton_clicked();

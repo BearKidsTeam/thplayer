@@ -40,11 +40,34 @@ fs::path qstring_to_path(const QString &s)
 #endif
 }
 
+class KeyEventFilter : public QObject
+{
+    Q_OBJECT
+public:
+    KeyEventFilter(QObject *parent = nullptr) : QObject(parent) {}
+
+Q_SIGNALS:
+    void c();
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override {
+        if (event->type() == QEvent::KeyRelease) {
+            QKeyEvent *e = static_cast<QKeyEvent *>(event);
+            if (e->key() == Qt::Key::Key_C) {
+                Q_EMIT c();
+                return true;
+            }
+        }
+        return QObject::eventFilter(obj, event);
+    }
+};
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    ui->altmixButton->hide();
     setPlayListTableHeader();
     ui->playlistTable->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
     ui->playlistTable->setSortingEnabled(false);
@@ -52,8 +75,12 @@ MainWindow::MainWindow(QWidget *parent) :
     devi = -1;
     timer = new QTimer();
     timer->setInterval(100);
+    auto kef = new KeyEventFilter(this);
+    this->installEventFilter(kef);
+    connect(kef, &KeyEventFilter::c, this, &MainWindow::switch_mix);
     connect(timer, &QTimer::timeout, this, &MainWindow::updateWidgets);
     connect(ui->progressslider, &QSlider::sliderReleased, this, &MainWindow::seek);
+    connect(ui->altmixButton, &QPushButton::clicked, this, &MainWindow::switch_mix);
     timer->start();
 }
 bool MainWindow::args(QCommandLineParser &p)
@@ -150,6 +177,8 @@ bool MainWindow::LoadFile(QString filepath)
     }
     else
         tracklist.LoadFile(datw, ver < 13 ? true : false);
+    if (ver == 13)
+        ui->altmixButton->setText("Spirit World [C]");
     ui->thnameLabel->setText(url.url());
     SetupTrackList();
     return true;
@@ -208,6 +237,7 @@ void MainWindow::stop()
 {
     ui->pauseButton->setEnabled(false);
     ui->pauseButton->setChecked(false);
+    altmix_state = -1;
     if (audioOutput)
     {
         audioOutput->stop();
@@ -215,6 +245,13 @@ void MainWindow::stop()
         audioOutput = nullptr;
         delete st;
         st = nullptr;
+    }
+    if (audioOutput_alt) {
+        audioOutput_alt->stop();
+        delete audioOutput_alt;
+        audioOutput_alt = nullptr;
+        delete st_alt;
+        st_alt = nullptr;
     }
 }
 
@@ -235,13 +272,15 @@ void MainWindow::dropEvent(QDropEvent *event)
 
 void MainWindow::updateWidgets()
 {
-    if (!st) return;
+    auto *active_st = altmix_state == 1 ? st_alt : st;
+    if (!active_st) return;
     if (!curtrk.length) return;
-    ui->progressslider->setValue((int)100.*st->pos_sample() / st->length_sample());
+    ui->progressslider->setValue((int)100. * active_st->pos_sample() / active_st->length_sample());
 }
 void MainWindow::seek()
 {
-    st->seek_sample(ui->progressslider->value() / 100. * st->length_sample());
+    auto *active_st = altmix_state == 1 ? st_alt : st;
+    active_st->seek_sample(ui->progressslider->value() / 100. * active_st->length_sample());
 }
 
 QAudioFormat MainWindow::getAudioFormat(unsigned rate)
@@ -289,6 +328,8 @@ void MainWindow::play(int index)
     if (index != -1) trkIdx = index;
     if (trkIdx < 0 || trkIdx >= tracklist.tracks.size()) return;
 
+    altmix_state = -1;
+
     ui->trknameLabel->setText(tracklist.tracks[trkIdx].title.length() ? tracklist.tracks[trkIdx].title : tracklist.tracks[trkIdx].filename);
     ui->commentTB->setText(tracklist.tracks[trkIdx].comment);
     curtrk = tracklist.tracks[trkIdx];
@@ -313,6 +354,26 @@ void MainWindow::play(int index)
     st = new LoopedPCMStreamer(srcfile, tracklist.tracks[trkIdx]);
 
     audioOutput->start([this](QSpan<int16_t> s){ st->callback(s); });
+    if (curtrk.altmix) {
+        ui->altmixButton->show();
+        ui->altmixButton->setChecked(false);
+        altmix_state = 0;
+        auto afaltmix = getAudioFormat(curtrk.altmix->rate);
+        QAudioDevice adaltmix(
+            ~devi ? QMediaDevices::audioOutputs()[devi]
+            : QMediaDevices::defaultAudioOutput());
+        if (!adaltmix.isFormatSupported(afaltmix))
+        {
+            qWarning() << "Default format not supported, trying to use the nearest.";
+            afaltmix = adaltmix.preferredFormat();
+        }
+        audioOutput_alt = new QAudioSink(adaltmix, afaltmix, this);
+        audioOutput_alt->setVolume(0.);
+        st_alt = new LoopedPCMStreamer(srcfile, *curtrk.altmix);
+        audioOutput_alt->start([this](QSpan<int16_t> s){ st_alt->callback(s); });
+    } else {
+        ui->altmixButton->hide();
+    }
     if (audioOutput->error())
     {
         OutputSelectionDialog d;
@@ -356,11 +417,28 @@ void MainWindow::on_nextButton_clicked()
     play(r);
 }
 
+void MainWindow::switch_mix()
+{
+    if (altmix_state == -1 || ui->pauseButton->isChecked()) return;
+    auto *old_st = altmix_state ? st_alt : st;
+    auto *new_st = altmix_state ? st : st_alt;
+    auto *old_ao = altmix_state ? audioOutput_alt : audioOutput;
+    auto *new_ao = altmix_state ? audioOutput : audioOutput_alt;
+    auto old_pos = old_st->pos_sample();
+    auto new_pos = old_pos * (1. * new_ao->format().sampleRate() / old_ao->format().sampleRate());
+    new_st->seek_sample(new_pos);
+    old_ao->setVolume(0.);
+    new_ao->setVolume(1.);
+    altmix_state = 1 - altmix_state;
+    ui->altmixButton->setChecked(altmix_state);
+}
+
 void MainWindow::on_pauseButton_clicked(bool checked)
 {
-    if (!audioOutput) return;
-    if (checked) audioOutput->suspend();
-    else audioOutput->resume();
+    auto *ao = altmix_state == 1 ? audioOutput_alt : audioOutput;
+    if (!ao) return;
+    if (checked) ao->suspend();
+    else ao->resume();
 }
 
 void MainWindow::on_action_Open_triggered()
@@ -383,3 +461,4 @@ void MainWindow::on_action_About_triggered()
                        "https:://github.com/BearKidsTeam/thplayer");
 }
 
+#include "mainwindow.moc"
